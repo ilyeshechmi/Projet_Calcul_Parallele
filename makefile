@@ -16,6 +16,6 @@ run: $(TARGET)
 	./$(TARGET)
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) *.dat
 
 .PHONY: all run clean
