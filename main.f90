@@ -11,7 +11,7 @@ program advection_rusanov
   real(pr), allocatable :: x(:), u(:)
 
   ! --- Lecture paramètres ---
-  call lire_parametres("parameters.txt", params)
+  call lire_parametres("parametres.txt", params)
   nx         = params%nx
   L          = params%L
   a          = params%a
