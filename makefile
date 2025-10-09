@@ -12,8 +12,7 @@ all: $(TARGET)
 $(TARGET): $(OBJS)
 	$(FC) $(FFLAGS) -o $@ $(OBJS)
 
-run: $(TARGET)
-	./$(TARGET)
+
 
 clean:
 	rm -f $(OBJS) $(TARGET) *.dat
