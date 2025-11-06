@@ -18,10 +18,11 @@ program advection_rusanov
   dt         = params%dt
   Tfinal     = params%T_final
   save_every = params%save_every
+  CFL        = params%CFL
+  dx         = params%dx
 
   ! --- Grille uniforme (centres de mailles) ---
   allocate(x(nx), u(nx))
-  dx = L / real(nx, pr)
   x  = [ ( (i-0.5_pr)*dx, i=1,nx ) ]
 
   ! --- Condition initiale ---
@@ -30,10 +31,6 @@ program advection_rusanov
   
   ! --- Condition à Gauche ---
   uG = 1._pr
-
-  ! --- CFL  ---
-  cfl = abs(a) * dt / dx
-  write(*,'(A25, F10.4)') " CFL = a*dt/dx =", cfl
 
 
   ! --- Sortie initiale ---

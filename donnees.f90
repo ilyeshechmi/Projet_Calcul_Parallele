@@ -4,8 +4,10 @@ module donnees
 
   type :: Parametres
     integer  :: nx         = 200
+    real(pr) :: dx         = 0.001_pr
     real(pr) :: L          = 1.0_pr
     real(pr) :: a          = 1.0_pr
+    real(pr) :: CFL        = 0.9_pr 
     real(pr) :: dt         = 2.0e-3_pr
     real(pr) :: T_final    = 0.5_pr
     integer  :: save_every = 50
@@ -21,10 +23,10 @@ contains
     type(Parametres), intent(out) :: params
     integer :: ios, u
     integer :: nx, save_every
-    real(pr) :: L, a, dt, T_final
+    real(pr) :: L, a, dt, T_final , CFL ,dx
     character(len=256) :: outfile
 
-    namelist /input/ nx, L, a, dt, T_final, outfile, save_every
+    namelist /input/ nx, L, a, CFL, T_final, outfile, save_every
 
     ! --- Initialisation avec les valeurs par défaut du type ---
     nx         = params%nx
@@ -51,10 +53,14 @@ contains
     params%nx         = nx
     params%L          = L
     params%a          = a
-    params%dt         = dt
+    params%CFL         = CFL
     params%T_final    = T_final
     params%save_every = save_every
     params%outfile    = outfile
+    dx = L / real(nx, pr)
+    params%dx         = dx
+    dt = CFL * dx / abs(a)
+    params%dt         = dt
 
     ! --- Affichage des paramètres chargés ---
     write(*,*)
@@ -62,6 +68,7 @@ contains
     write(*,'(A25, I10)')     "  Nombre de points (nx):",        params%nx
     write(*,'(A25, F10.4)')   "  Longueur du domaine (L):",      params%L
     write(*,'(A25, F10.4)')   "  Vitesse (a):",                  params%a
+    write(*,'(A25, ES10.3)')  "  Condition CFL (CFL):",            params%CFL
     write(*,'(A25, ES10.3)')  "  Pas de temps (dt):",            params%dt
     write(*,'(A25, F10.4)')   "  Temps final (T_final):",        params%T_final
     write(*,'(A25, I10)')     "  Sauvegarde tous les:",          params%save_every
@@ -86,8 +93,8 @@ contains
     write(t_str,'(F12.6)') t
     t_str = adjustl(t_str)
 
-    ! nom de fichier: <base>_t=<t>.dat
-    fname = trim(fichier_sortie)//'_t='//trim(t_str)
+    ! nom de fichier: <base>_t<t>.dat
+    fname = trim(fichier_sortie)//'_t'//trim(t_str)//'.dat'
 
     open(newunit=uo, file=fname, status='replace', action='write', iostat=ios)
     if (ios /= 0) then
@@ -96,7 +103,7 @@ contains
     end if
 
     ! Écriture
-    write(uo,'(a,1x,a)') '!t=', trim(t_str)
+    write(uo,'(a,1x,a)') '#t=', trim(t_str)
     do i = 1, size(x)
         write(uo,'(2(ES20.10,1X))') x(i), u(i)
     end do
