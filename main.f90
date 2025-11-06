@@ -1,6 +1,7 @@
 program advection_rusanov
     
   use precision 
+  use fonctions
   use donnees
   use schema_rusanov
   implicit none
@@ -27,7 +28,7 @@ program advection_rusanov
 
   ! --- Condition initiale ---
   ! u = sin( 2.0_pr * pi * x / L )
-  u = exp((-x**2))
+  u = gaussienne(x)
   
   ! --- Condition à Gauche ---
   uG = 1._pr

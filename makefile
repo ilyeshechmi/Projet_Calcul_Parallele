@@ -2,7 +2,7 @@
 FC      = gfortran
 FFLAGS  = -O2 -Wall -std=f2008
 TARGET  = run
-OBJS    = precision.o donnees.o schema_rusanov.o main.o
+OBJS    = precision.o fonctions.o donnees.o schema_rusanov.o main.o
 
 all: $(TARGET)
 
