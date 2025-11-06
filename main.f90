@@ -25,7 +25,8 @@ program advection_rusanov
   x  = [ ( (i-0.5_pr)*dx, i=1,nx ) ]
 
   ! --- Condition initiale ---
-  u = sin( 2.0_pr * pi * x / L )
+  ! u = sin( 2.0_pr * pi * x / L )
+  u = exp((-x**2))
   
   ! --- Condition à Gauche ---
   uG = 1._pr
@@ -43,8 +44,9 @@ program advection_rusanov
   do n = 1, nsteps
     call avancer_Rusanov(u, a, dx, dt,uG)
     t = t + dt
+    ! Écriure des résultats
     if (mod(n, save_every) == 0 .or. n == nsteps) then
-      call ecrire(trim(params%outfile), t, x, u) ! Écriure des résultats
+      call ecrire(trim(params%outfile), t, x, u) 
     end if
   end do
 

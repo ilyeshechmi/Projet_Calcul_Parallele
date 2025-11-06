@@ -15,8 +15,10 @@ module donnees
 contains
 
   subroutine lire_parametres(fname, params)
+    use precision
+    implicit none
     character(len=*), intent(in)  :: fname
-    type(Parametres),      intent(out)  :: params
+    type(Parametres), intent(out) :: params
     integer :: ios, u
     integer :: nx, save_every
     real(pr) :: L, a, dt, T_final
@@ -24,7 +26,7 @@ contains
 
     namelist /input/ nx, L, a, dt, T_final, outfile, save_every
 
-    ! initialise avec les valeurs par défaut du type
+    ! --- Initialisation avec les valeurs par défaut du type ---
     nx         = params%nx
     L          = params%L
     a          = params%a
@@ -33,18 +35,19 @@ contains
     save_every = params%save_every
     outfile    = params%outfile
 
+    ! --- Lecture du fichier de paramètres ---
     open(newunit=u, file=fname, status="old", action="read", iostat=ios)
     if (ios /= 0) then
-      write(*,*) " Impossible d'ouvrir ", trim(fname), " — on garde les valeurs par défaut."
+      write(*,*) "⚠️  Impossible d'ouvrir ", trim(fname), " — valeurs par défaut conservées."
     else
       read(u, nml=input, iostat=ios)
       close(u)
       if (ios /= 0) then
-        write(*,*) "ATTENTION: Lecture namelist échouée — on garde les valeurs par défaut."
+        write(*,*) "⚠️  Lecture namelist échouée — valeurs par défaut conservées."
       endif
     endif
 
-    ! copie vers params
+    ! Copie vers l’objet params
     params%nx         = nx
     params%L          = L
     params%a          = a
@@ -53,7 +56,21 @@ contains
     params%save_every = save_every
     params%outfile    = outfile
 
+    ! --- Affichage des paramètres chargés ---
+    write(*,*)
+    write(*,*) "==================== PARAMÈTRES CHARGÉS ===================="
+    write(*,'(A25, I10)')     "  Nombre de points (nx):",        params%nx
+    write(*,'(A25, F10.4)')   "  Longueur du domaine (L):",      params%L
+    write(*,'(A25, F10.4)')   "  Vitesse (a):",                  params%a
+    write(*,'(A25, ES10.3)')  "  Pas de temps (dt):",            params%dt
+    write(*,'(A25, F10.4)')   "  Temps final (T_final):",        params%T_final
+    write(*,'(A25, I10)')     "  Sauvegarde tous les:",          params%save_every
+    write(*,'(A25, A)')       "  Fichier de sortie:",            trim(params%outfile)
+    write(*,*) "============================================================"
+    write(*,*)
+
   end subroutine lire_parametres
+
 
 
   subroutine ecrire(fichier_sortie, t, x, u)
