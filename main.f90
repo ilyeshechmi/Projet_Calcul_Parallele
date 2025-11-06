@@ -33,6 +33,7 @@ program advection_rusanov
 
   ! --- CFL  ---
   cfl = abs(a) * dt / dx
+  write(*,'(A25, F10.4)') " CFL = a*dt/dx =", cfl
 
 
   ! --- Sortie initiale ---
@@ -51,5 +52,7 @@ program advection_rusanov
   end do
 
   write(*,*) "Terminé. Fichiers générés: "//trim(params%outfile)//"_t=<t>.dat"
+  write(*,*) "============================================================"
+
   deallocate(x, u)
 end program advection_rusanov

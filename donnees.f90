@@ -38,12 +38,12 @@ contains
     ! --- Lecture du fichier de paramètres ---
     open(newunit=u, file=fname, status="old", action="read", iostat=ios)
     if (ios /= 0) then
-      write(*,*) "⚠️  Impossible d'ouvrir ", trim(fname), " — valeurs par défaut conservées."
+      write(*,*) "  Impossible d'ouvrir ", trim(fname), " — valeurs par défaut conservées."
     else
       read(u, nml=input, iostat=ios)
       close(u)
       if (ios /= 0) then
-        write(*,*) "⚠️  Lecture namelist échouée — valeurs par défaut conservées."
+        write(*,*) "  Lecture namelist échouée — valeurs par défaut conservées."
       endif
     endif
 
@@ -67,7 +67,6 @@ contains
     write(*,'(A25, I10)')     "  Sauvegarde tous les:",          params%save_every
     write(*,'(A25, A)')       "  Fichier de sortie:",            trim(params%outfile)
     write(*,*) "============================================================"
-    write(*,*)
 
   end subroutine lire_parametres
 
@@ -88,7 +87,7 @@ contains
     t_str = adjustl(t_str)
 
     ! nom de fichier: <base>_t=<t>.dat
-    fname = trim(fichier_sortie)//'_t='//trim(t_str)//'.dat'
+    fname = trim(fichier_sortie)//'_t='//trim(t_str)
 
     open(newunit=uo, file=fname, status='replace', action='write', iostat=ios)
     if (ios /= 0) then
