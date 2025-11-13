@@ -11,10 +11,21 @@ program advection_rusanov
   real(pr) :: L, a, dt, Tfinal, dx, t, cfl, uG
   real(pr), allocatable :: x(:), u(:,:),u_ex(:)
   real(pr) ::  errL2, errLinf
-  
-  
+  character(len=256) :: fichier_param
+  integer :: nargs
+
+  ! Récupérer le nom du fichier en ligne de commande
+  nargs = command_argument_count()
+
+  if (nargs < 1) then
+    write(*,*) "Erreur: Veuillez fournir le fichier de paramètres en argument."
+    stop
+  end if
+
+  call get_command_argument(1, fichier_param)
+
   ! --- Lecture paramètres ---
-  call lire_parametres("parametres.txt", params)
+  call lire_parametres(fichier_param, params)
   nx         = params%nx
   L          = params%L
   a          = params%a
