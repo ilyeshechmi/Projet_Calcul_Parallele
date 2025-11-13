@@ -1,4 +1,4 @@
-module precision
+module precision_mod
     
   implicit none
   
@@ -8,4 +8,4 @@ module precision
 
   real(pr), parameter :: pi = acos(-1.0_pr)
 
-end module precision
+end module 

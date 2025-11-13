@@ -1,5 +1,5 @@
-module schema_rusanov
-  use precision
+module schema_rusanov_mod
+  use precision_mod
   implicit none
 contains
 
@@ -65,4 +65,4 @@ contains
     deallocate(unp1)
   end subroutine avancer_Rusanov
 
-end module schema_rusanov
+end module 

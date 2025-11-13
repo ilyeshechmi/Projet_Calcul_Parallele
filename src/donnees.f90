@@ -1,8 +1,9 @@
-module donnees
-  use precision
+module donnees_mod
+  use precision_mod
   implicit none
 
-  type :: Parametres
+    type :: Parametres 
+    integer  :: cas_test   = 0
     integer  :: nx         = 200
     real(pr) :: dx         = 0.001_pr
     real(pr) :: L          = 1.0_pr
@@ -18,18 +19,18 @@ module donnees
 contains
 
   subroutine lire_parametres(fname, params)
-    use precision
     implicit none
     character(len=*), intent(in)  :: fname
     type(Parametres), intent(out) :: params
-    integer :: ios, u , cl_periodique
+    integer :: ios, u , cas_test
     integer :: nx, save_every
     real(pr) :: L, a, dt, T_final , CFL ,dx
     character(len=256) :: outfile
 
-    namelist /input/ nx, L, a, CFL, T_final, outfile, save_every, cl_periodique
+    namelist /input/ cas_test, nx, L, a, CFL, T_final, outfile, save_every
 
     ! --- Initialisation avec les valeurs par défaut du type ---
+    cas_test   = params%cas_test
     nx         = params%nx
     L          = params%L
     a          = params%a
@@ -37,7 +38,6 @@ contains
     T_final    = params%T_final
     save_every = params%save_every
     outfile    = params%outfile
-    cl_periodique = params%cl_periodique
 
     ! --- Lecture du fichier de paramètres ---
     open(newunit=u, file=fname, status="old", action="read", iostat=ios)
@@ -52,6 +52,7 @@ contains
     endif
 
     ! Copie des valeurs lues vers l’objet params
+    params%cas_test   = cas_test
     params%nx         = nx
     params%L          = L
     params%a          = a
@@ -63,23 +64,23 @@ contains
     params%dx         = dx
     dt = CFL * dx / abs(a)
     params%dt         = dt
-    params%cl_periodique = cl_periodique  
 
     ! --- Affichage des paramètres chargés ---
     write(*,*)
     write(*,*) "==================== PARAMÈTRES CHARGÉS ===================="
+    write(*,'(A25, I10)')     "  Cas_test :",          params%CL_periodique
     write(*,'(A25, I10)')     "  Nombre de points (nx):",        params%nx
     write(*,'(A25, F10.4)')   "  Longueur du domaine (L):",      params%L
     write(*,'(A25, F10.4)')   "  Vitesse (a):",                  params%a
     write(*,'(A25, ES10.3)')  "  Condition CFL (CFL):",            params%CFL
     write(*,'(A25, ES10.3)')  "  Pas de temps (dt):",            params%dt
     write(*,'(A25, F10.4)')   "  Temps final (T_final):",        params%T_final
-    write(*,'(A25, I10)')     "  CL_périoduqe:",          params%CL_periodique
     write(*,'(A25, I10)')     "  Sauvegarde tous les:",          params%save_every
     write(*,'(A25, A)')       "  Fichier de sortie:",            trim(params%outfile)
     write(*,*) "============================================================"
 
   end subroutine lire_parametres
+
 
 
 
@@ -115,4 +116,4 @@ contains
     end subroutine ecrire
 
 
-end module donnees
+end module donnees_mod

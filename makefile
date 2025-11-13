@@ -1,4 +1,4 @@
-# ===========================
+  # ===========================
 #     Makefile PROPRE
 # ===========================
 
@@ -12,7 +12,7 @@ BUILD_DIR = build
 TARGET  = run
 
 # Liste des fichiers sources (dans le bon ordre de dépendance)
-SRC_FILES = precision.f90 fonctions.f90 donnees.f90 schema_rusanov.f90 main.f90
+SRC_FILES = precision.f90 initialiser.f90  fonctions.f90 donnees.f90 schema_rusanov.f90 main.f90
 
 SRCS = $(addprefix $(SRC_DIR)/,$(SRC_FILES))
 OBJS = $(SRCS:$(SRC_DIR)/%.f90=$(BUILD_DIR)/%.o)

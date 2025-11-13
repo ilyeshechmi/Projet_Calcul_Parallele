@@ -1,13 +1,13 @@
 program advection_rusanov
     
-  use precision 
-  use fonctions
-  use donnees
-  use schema_rusanov
+  use precision_mod
+  use fonctions_mod
+  use donnees_mod
+  use schema_rusanov_mod
   implicit none
 
   type(Parametres) :: params
-  integer  :: nx, nsteps, n, save_every, i ,cl_periodique
+  integer  :: nx, nsteps, n, save_every, i ,cl_periodique ,cas_test 
   real(pr) :: L, a, dt, Tfinal, dx, t, cfl, uG
   real(pr), allocatable :: x(:), u(:,:),u_ex(:),xeff(:)
   real(pr) ::  errL2, errLinf
@@ -26,6 +26,7 @@ program advection_rusanov
 
   ! --- Lecture paramètres ---
   call lire_parametres(fichier_param, params)
+  cas_test   = params%cas_test
   nx         = params%nx
   L          = params%L
   a          = params%a
@@ -33,7 +34,6 @@ program advection_rusanov
   save_every = params%save_every
   CFL        = params%CFL
   dx         = params%dx
-  cl_periodique = params%cl_periodique
   
 
   ! --- Grille uniforme (centres de mailles) ---

@@ -1,14 +1,60 @@
-module fonctions
-    use precision
+module fonctions_mod
+    use precision_mod
     implicit none 
 contains 
 
-    function gaussienne(x) result(res)
-        real(pr), intent(in) :: x(:)
-        real(pr) :: res(size(x,1))
+    function C_init(i_CL, x) result(u0)
+    implicit none
+    integer,  intent(in) :: i_CL
+    real(pr), intent(in) :: x
+    real(pr)             :: u0
 
-        res = exp(-(x-5._pr)**2)
-    end function gaussienne
+    select case(i_CL)
+
+    case(1)
+        ! --- Nulle ---
+      u0= 0.0_pr
+
+    case(2)
+      ! --- Gaussienne ---
+      u0 = exp( - ((x - 0.5_pr)/0.1_pr)**2 )
+
+    case(3)
+      ! --- Sinus ---
+      u0 = sin(2.0_pr*pi*x)
+
+    case default
+      print *, "Erreur : Condition initiale inconnue"
+      stop
+    end select
+
+  end function C_init
+
+
+  function C_limite(i_CL, t) result(uL)
+    implicit none
+    integer,  intent(in) :: i_CL
+    real(pr), intent(in) :: t
+    real(pr)             :: uL
+
+    select case(i_CL)
+
+    case(1)
+      ! --- Valeur constante ---
+      uL = 1.0_pr
+
+    case(2)
+      ! --- Sinusoidale ---
+      uL = sin(2.0_pr*pi*t)
+
+    case default
+      print *, "Erreur : Condition limite inconnue"
+      stop  
+    end select
+
+  end function C_limite
+
+
     
  function erreur_L2(u_exact, u_num, dx) result(errL2)
     implicit none
