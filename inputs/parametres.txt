@@ -1,7 +1,7 @@
 &input
   nx         = 200
   L          = 10.0
-  a          = -2.0
+  a          = 2.0
   CFL         = 0.8
   T_final    = 10
   save_every = 2

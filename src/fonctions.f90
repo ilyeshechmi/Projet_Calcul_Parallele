@@ -32,9 +32,9 @@ contains
 
   function erreur_Linf(u_exact, u_num) result(errLinf)
     implicit none
-    real(8), intent(in) :: u_exact(:), u_num(:)
-    real(8) :: errLinf
-    real(8) :: max_err, max_u
+    real(pr), intent(in) :: u_exact(:), u_num(:)
+    real(pr) :: errLinf
+    real(pr) :: max_err, max_u
 
     max_err = maxval( abs(u_exact - u_num) )
     max_u   = maxval( abs(u_exact) )
@@ -42,5 +42,20 @@ contains
     errLinf = max_err / max_u
 
   end function erreur_Linf
+
+  function f_1(a,U) result(R)
+    implicit none
+    real(pr),intent(in)  :: U(:,:)
+    real(pr),intent(in)  :: a(:)
+    real(pr), allocatable :: R(:,:)
+    integer :: i 
+    allocate(R(size(a(:)),size(U(1,:))))
+
+    do i = 1,size(a(:))
+      R(i,:)=a(i)*U(i,:)
+    end do
+
+  end function f_1
+
 
 end module 
