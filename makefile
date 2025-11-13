@@ -52,6 +52,6 @@ $(BUILD_DIR)/main.o:           $(BUILD_DIR)/precision.o $(BUILD_DIR)/donnees.o $
 # ===========================
 
 clean:
-	rm -rf $(BUILD_DIR) *.dat $(TARGET)
+	rm -rf $(BUILD_DIR) *.dat $(TARGET) resultats/*.dat
 
 .PHONY: all clean
