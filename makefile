@@ -1,20 +1,57 @@
-# --- Makefile simple pour gfortran ---
+# ===========================
+#     Makefile PROPRE
+# ===========================
+
 FC      = gfortran
 FFLAGS  = -O2 -Wall -std=f2008
+
+# Répertoires
+SRC_DIR   = src
+BUILD_DIR = build
+
 TARGET  = run
-OBJS    = precision.o fonctions.o donnees.o schema_rusanov.o main.o
+
+# Liste des fichiers sources (dans le bon ordre de dépendance)
+SRC_FILES = precision.f90 fonctions.f90 donnees.f90 schema_rusanov.f90 main.f90
+
+SRCS = $(addprefix $(SRC_DIR)/,$(SRC_FILES))
+OBJS = $(SRCS:$(SRC_DIR)/%.f90=$(BUILD_DIR)/%.o)
+
+# ===========================
+#       Cibles principales
+# ===========================
 
 all: $(TARGET)
-
-%.o: %.f90
-	$(FC) $(FFLAGS) -c $<
 
 $(TARGET): $(OBJS)
 	$(FC) $(FFLAGS) -o $@ $(OBJS)
 
+# ===========================
+#   Compilation dans build/
+# ===========================
 
+# Règle générique : build/%.o dépend de src/%.f90
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.f90 | $(BUILD_DIR)
+	$(FC) $(FFLAGS) -c $< -o $@ -J $(BUILD_DIR)
+
+# Créer build si inexistant
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# ===========================
+#   Dépendances de modules
+# ===========================
+# donnees.f90, schema_rusanov.f90, main.f90 utilisent "use precision"
+$(BUILD_DIR)/donnees.o:        $(BUILD_DIR)/precision.o
+$(BUILD_DIR)/schema_rusanov.o: $(BUILD_DIR)/precision.o
+$(BUILD_DIR)/fonctions.o:      $(BUILD_DIR)/precision.o
+$(BUILD_DIR)/main.o:           $(BUILD_DIR)/precision.o $(BUILD_DIR)/donnees.o $(BUILD_DIR)/schema_rusanov.o $(BUILD_DIR)/fonctions.o
+
+# ===========================
+#       Nettoyage
+# ===========================
 
 clean:
-	rm -f $(OBJS) $(TARGET) *.dat *.mod *.o
+	rm -rf $(BUILD_DIR) *.dat $(TARGET)
 
-.PHONY: all run clean
+.PHONY: all clean
