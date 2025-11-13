@@ -11,6 +11,7 @@ module donnees
     real(pr) :: dt         = 2.0e-3_pr
     real(pr) :: T_final    = 0.5_pr
     integer  :: save_every = 50
+    integer  :: cl_periodique = 0  ! 0=non périodique, 1=périodique
     character(len=256) :: outfile = "results.dat"
   end type Parametres
 
@@ -21,12 +22,12 @@ contains
     implicit none
     character(len=*), intent(in)  :: fname
     type(Parametres), intent(out) :: params
-    integer :: ios, u
+    integer :: ios, u , cl_periodique
     integer :: nx, save_every
     real(pr) :: L, a, dt, T_final , CFL ,dx
     character(len=256) :: outfile
 
-    namelist /input/ nx, L, a, CFL, T_final, outfile, save_every
+    namelist /input/ nx, L, a, CFL, T_final, outfile, save_every, cl_periodique
 
     ! --- Initialisation avec les valeurs par défaut du type ---
     nx         = params%nx
@@ -36,6 +37,7 @@ contains
     T_final    = params%T_final
     save_every = params%save_every
     outfile    = params%outfile
+    cl_periodique = params%cl_periodique
 
     ! --- Lecture du fichier de paramètres ---
     open(newunit=u, file=fname, status="old", action="read", iostat=ios)
@@ -49,7 +51,7 @@ contains
       endif
     endif
 
-    ! Copie vers l’objet params
+    ! Copie des valeurs lues vers l’objet params
     params%nx         = nx
     params%L          = L
     params%a          = a
@@ -61,6 +63,7 @@ contains
     params%dx         = dx
     dt = CFL * dx / abs(a)
     params%dt         = dt
+    params%cl_periodique = cl_periodique  
 
     ! --- Affichage des paramètres chargés ---
     write(*,*)
@@ -71,6 +74,7 @@ contains
     write(*,'(A25, ES10.3)')  "  Condition CFL (CFL):",            params%CFL
     write(*,'(A25, ES10.3)')  "  Pas de temps (dt):",            params%dt
     write(*,'(A25, F10.4)')   "  Temps final (T_final):",        params%T_final
+    write(*,'(A25, I10)')     "  CL_périoduqe:",          params%CL_periodique
     write(*,'(A25, I10)')     "  Sauvegarde tous les:",          params%save_every
     write(*,'(A25, A)')       "  Fichier de sortie:",            trim(params%outfile)
     write(*,*) "============================================================"

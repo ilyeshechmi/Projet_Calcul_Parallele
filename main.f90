@@ -7,7 +7,7 @@ program advection_rusanov
   implicit none
 
   type(Parametres) :: params
-  integer  :: nx, nsteps, n, save_every, i
+  integer  :: nx, nsteps, n, save_every, i ,cl_periodique
   real(pr) :: L, a, dt, Tfinal, dx, t, cfl, uG
   real(pr), allocatable :: x(:), u(:),u_ex(:)
   real(pr) ::  errL2, errLinf
@@ -23,6 +23,8 @@ program advection_rusanov
   save_every = params%save_every
   CFL        = params%CFL
   dx         = params%dx
+  cl_periodique = params%cl_periodique
+  
 
   ! --- Grille uniforme (centres de mailles) ---
   allocate(x(nx), u(nx))
@@ -33,7 +35,7 @@ program advection_rusanov
   u = gaussienne(x)
   
   ! --- Condition à Gauche ---
-  uG = 1._pr
+  uG = 0._pr
 
 
   ! --- Sortie initiale ---
@@ -43,7 +45,7 @@ program advection_rusanov
   ! --- Boucle en temps ---
   nsteps = ceiling( Tfinal / dt )
   do n = 1, nsteps
-    call avancer_Rusanov(u, a, dx, dt,uG)
+    call avancer_Rusanov(u, a, dx, dt,uG,cl_periodique)
     t = t + dt
     ! Écriure des résultats
     if (mod(n, save_every) == 0 .or. n == nsteps) then
