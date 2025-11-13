@@ -5,6 +5,6 @@
   CFL         = 0.8
   T_final    = 10
   save_every = 2
-  outfile    = 'results'
+  outfile    = 'resultats/results'
   cl_periodique=1
 /
