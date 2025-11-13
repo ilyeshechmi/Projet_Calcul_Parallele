@@ -24,44 +24,42 @@ contains
     nx = size(u)
     allocate(unp1(nx))
 
-    do i = 1, nx
+    !Cas periodique 
+    if ( cl_periodique ==1 ) then
+     
+      fl = flux_rusanov(a, u(nx), u(1)) !ghost gauche = u(nx)
+      fr = flux_rusanov(a, u(1), u(2))
+      unp1(1) = u(1) - (dt/dx)*( fr - fl )
+      
+      do i  = 2, nx-1
+        
+        fl=fr !Flux gauche Dejà calculé
+        fr=flux_rusanov(a, u(i), u(i+1)) ! Flux droit
+        unp1(i) = u(i) - (dt/dx)*( fr - fl )
+      end do
 
-      ! ---- Flux gauche F_{i-1/2} ----
-      if (cl_periodique == 1) then
-        ! Périodique
-        if (i == 1) then
-          fl = flux_rusanov(a, u(nx), u(1))
-        else
-          fl = flux_rusanov(a, u(i-1), u(i))
-        end if
-      else
-        ! CL inflow à gauche
-        if (i == 1) then
-          fl = flux_rusanov(a, uG, u(1))   ! ghost gauche = uG
-        else
-          fl = flux_rusanov(a, u(i-1), u(i))
-        end if
-      end if
+      fl=fr 
+      fr = flux_rusanov(a, u(nx), u(1)) !ghost droit = u(1)
+      unp1(nx)=u(nx) -(dt/dx)*(fr-fl)
 
-      ! ---- Flux droit F_{i+1/2} ----
-      if (cl_periodique == 1) then
-        ! Périodique
-        if (i == nx) then
-          fr = flux_rusanov(a, u(nx), u(1))   ! ghost droit = u(1)
-        else
-          fr = flux_rusanov(a, u(i), u(i+1))
-        end if
-      else
-        ! Outflow libre à droite
-        if (i == nx) then
-          fr = flux_rusanov(a, u(nx), u(nx))  ! ghost droit = u(nx)
-        else
-          fr = flux_rusanov(a, u(i), u(i+1))
-        end if
-      end if
+    else
+      !Cas non périodique
 
-      unp1(i) = u(i) - (dt/dx)*( fr - fl )
-    end do
+      fl = flux_rusanov(a, uG, u(1)) ! ghost gauche = uG
+      fr = flux_rusanov(a, u(1), u(2))
+      unp1(1) = u(1) - (dt/dx)*( fr - fl )
+      
+      do i  = 2, nx-1
+        fl=fr
+        fr=flux_rusanov(a, u(i), u(i+1))
+        unp1(i) = u(i) - (dt/dx)*( fr - fl )
+      end do
+
+      fl=fr
+      fr = flux_rusanov(a, u(nx), u(nx)) !ghost droit = u(nx)
+      unp1(nx)=u(nx) -(dt/dx)*(fr-fl)
+
+    end if
 
     u = unp1
     deallocate(unp1)

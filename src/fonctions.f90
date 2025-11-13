@@ -57,5 +57,22 @@ contains
 
   end function f_1
 
+  ! function U_exa() result(u_ex)
 
+
+  !    allocate(u_ex(nx))
+  ! do i = 1, nx
+  !   if ( cl_periodique ==1 ) then
+  !     xeff(i)=modulo(x(i)-a*t,10._pr)
+  !     !u_ex(i) = exp(-(xeff(i)-5._pr)**2)
+  !     u_ex(i) = sin(2._pr *pi*xeff(i)/L)
+  !   else
+  !     if (x(i) - a*t > 0._pr) then
+  !       !u_ex(i) = exp(-(x(i) - a*t-5._pr)**2)
+  !       u_ex(i) = sin(2._pr *pi*(x(i)-a*t)/L)
+  !     else
+  !       u_ex(i) = uG
+  !     end if
+  !   end if
+   
 end module 

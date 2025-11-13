@@ -6,5 +6,5 @@
   T_final    = 10
   save_every = 2
   outfile    = 'resultats/results'
-  cl_periodique=1
+  cl_periodique=0
 /

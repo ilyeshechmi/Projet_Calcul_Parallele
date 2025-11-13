@@ -15,7 +15,7 @@ set grid
 set yrange [0:1.1]
 
 # Récupérer la liste des fichiers results_t* dans l'ordre
-files = system("ls results_t*")
+files = system("ls resultats/results_t*")
 
 # ---------- Boucle sur tous les fichiers ----------
 do for [i=1:words(files)] {
