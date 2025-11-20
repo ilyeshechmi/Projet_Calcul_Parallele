@@ -1,24 +1,26 @@
-### Animation à partir des fichiers results_t* (x y)
-
 reset
 
 # ---------- Réglages généraux ----------
-set term gif animate delay 5 optimize    # GIF animé, delay=5 (modifiable)
-set output "animation_results.gif"       # Nom du fichier de sortie
+set term gif animate delay 5 optimize
+set output "animation_results.gif"
 
 set xlabel "x"
 set ylabel "u(x)"
 set grid
 
 # Optionnel : fixer les bornes des axes
- set xrange [0:10]
-set yrange [0:1.1]
+set xrange [0:10]
+set yrange [-1:2]
 
-# Récupérer la liste des fichiers results_t* dans l'ordre
-files = system("ls resultats/results_t*")
+# Récupérer la liste des fichiers results_t* triés par le temps (numérique)
+# - printf '%s\n' ... pour avoir un fichier par ligne
+# - sort -t_ -k2.2n : sépare au "_" et trie numériquement à partir du 2ème caractère de "t0.000000.dat"
+files = system("printf '%s\n' resultats/results_t* | sort -t_ -k2.2n")
+
+nfiles = words(files)
 
 # ---------- Boucle sur tous les fichiers ----------
-do for [i=1:words(files)] {
+do for [i=1:nfiles] {
     f = word(files, i)
     print sprintf("Traitement de %s", f)
 

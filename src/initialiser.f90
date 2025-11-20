@@ -22,7 +22,7 @@ contains
           i_CL = 1  ! CL : =1 
 
         case (3) 
-          i_CI = 1  ! CI : nulle partout
+          i_CI = 3  ! CI : nulle partout
           i_CL = 2  ! CL sinusoidale
         case default
           print *, "Erreur : Cas de test inconnu"

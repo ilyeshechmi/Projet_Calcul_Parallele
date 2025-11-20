@@ -19,7 +19,7 @@ module donnees_mod
 contains
 
   subroutine lire_parametres(fname, params)
-    implicit none
+
     character(len=*), intent(in)  :: fname
     type(Parametres), intent(out) :: params
     integer :: ios, u , cas_test
@@ -68,7 +68,7 @@ contains
     ! --- Affichage des paramètres chargés ---
     write(*,*)
     write(*,*) "==================== PARAMÈTRES CHARGÉS ===================="
-    write(*,'(A25, I10)')     "  Cas_test :",          params%CL_periodique
+    write(*,'(A25, I10)')     "  Cas_test :",          params%cas_test
     write(*,'(A25, I10)')     "  Nombre de points (nx):",        params%nx
     write(*,'(A25, F10.4)')   "  Longueur du domaine (L):",      params%L
     write(*,'(A25, F10.4)')   "  Vitesse (a):",                  params%a
