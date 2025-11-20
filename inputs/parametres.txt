@@ -1,5 +1,5 @@
 &input
-  cas_test   = 1         
+  cas_test   = 4         
   ! ------------------------------------------------------------
   ! cas_test = 1 : CI = gaussienne , CL = périodique
   ! cas_test = 2 : CI = nulle      , CL = constante (=1)
