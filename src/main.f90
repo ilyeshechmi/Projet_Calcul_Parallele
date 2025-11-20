@@ -99,11 +99,8 @@ program advection_rusanov
   !=======================================================
 
   t = 0.0_pr
-  if (cas_test /= 4) then
-     call ecrire(trim(params%outfile), t, x, u(:,1))
-  else
-     call ecrire(trim(params%outfile)//"_rho", t, x, u(:,1))
-  end if
+  call ecrire(trim(params%outfile), t, x, u)
+
 
   !=======================================================
   ! 6) Boucle en temps
@@ -127,12 +124,9 @@ program advection_rusanov
     t = t + dt
     n = n + 1
 
-    if (mod(n, save_every) == 0 .or. n == nsteps) then
-       if (cas_test /= 4) then
-          call ecrire(trim(params%outfile), t, x, u(:,1))
-       else
-          call ecrire(trim(params%outfile)//"_rho", t, x, u(:,1))
-       end if
+    if (mod(n, save_every) == 0 .or. n == nsteps) then  
+          call ecrire(trim(params%outfile), t, x, u)
+       
     end if
 
   end do

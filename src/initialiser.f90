@@ -36,7 +36,10 @@ contains
     end select
   end subroutine initialiser
 
-
+  !-------------------------------------------------------
+  ! CI du tube de choc de Sod
+  ! U est (nx,3) : (rho, rho*u, E)
+  !-------------------------------------------------------
   subroutine init_euler_sod(x, U, gamma, L)
     use precision_mod
     implicit none

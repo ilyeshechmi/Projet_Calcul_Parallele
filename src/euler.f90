@@ -116,42 +116,7 @@ contains
     deallocate(Unp1, ULv, URv, Fg, Fd)
   end subroutine avancer_rusanov_euler
 
-  !-------------------------------------------------------
-  ! CI du tube de choc de Sod
-  ! U est (nx,3) : (rho, rho*u, E)
-  !-------------------------------------------------------
-  subroutine init_euler_sod(x, U, gamma, L)
-    real(pr), intent(in)  :: x(:), gamma, L
-    real(pr), intent(out) :: U(:,:)      ! (nx,3)
-    integer :: i, nx
-    real(pr) :: rhoL, uL, pL, rhoR, uR, pR, E
 
-    nx = size(x)
 
-    ! États gauche et droite Sod
-    rhoL = 1.0
-    uL   = 0.0
-    pL   = 1.0
-
-    rhoR = 0.125
-    uR   = 0.0
-    pR   = 0.1
-
-    do i = 1, nx
-      if (x(i) < 0.5*L) then
-        ! gauche
-        E      = pL/(gamma - 1.0) + 0.5*rhoL*uL*uL
-        U(i,1) = rhoL
-        U(i,2) = rhoL*uL
-        U(i,3) = E
-      else
-        ! droite
-        E      = pR/(gamma - 1.0) + 0.5*rhoR*uR*uR
-        U(i,1) = rhoR
-        U(i,2) = rhoR*uR
-        U(i,3) = E
-      end if
-    end do
-  end subroutine init_euler_sod
 
 end module Euler_mod

@@ -88,7 +88,7 @@ contains
   
     character(len=*), intent(in) :: fichier_sortie   
     real(pr),         intent(in) :: t           ! temps courant
-    real(pr),         intent(in) :: x(:), u(:)  ! vecteurs (même taille)
+    real(pr),         intent(in) :: x(:), u(:,:)  ! vecteurs (même taille)
 
     character(len=64)  :: t_str
     character(len=512) :: fname
@@ -110,7 +110,7 @@ contains
     ! Écriture
     write(uo,'(a,1x,a)') '#t=', trim(t_str)
     do i = 1, size(x)
-        write(uo,'(2(ES20.10,1X))') x(i), u(i)
+        write(uo,'(2(ES20.10,1X))') x(i), u(i,:)
     end do
     close(uo)
     end subroutine ecrire
