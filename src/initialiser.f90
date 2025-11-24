@@ -40,10 +40,10 @@ contains
   ! CI du tube de choc de Sod
   ! U est (nx,3) : (rho, rho*u, E)
   !-------------------------------------------------------
-  subroutine init_euler_sod(x, U, gamma, L)
+  subroutine init_euler_sod(x, U, L)
     use precision_mod
     implicit none
-    real(pr), intent(in)  :: x(:), gamma, L
+    real(pr), intent(in)  :: x(:), L
     real(pr), intent(out) :: U(:,:)         ! (nx,3)
     integer :: i, nx
     real(pr) :: rhoL, uL, pL, rhoR, uR, p_R, E

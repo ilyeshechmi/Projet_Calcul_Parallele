@@ -8,4 +8,6 @@ module precision_mod
 
   real(pr), parameter :: pi = acos(-1.0_pr)
 
+  real(pr), parameter :: gamma = 1.4_pr
+  
 end module 

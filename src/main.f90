@@ -17,9 +17,8 @@ program advection_rusanov
 
   real(pr) :: L, a, dt, Tfinal, dx, t, cfl
   real(pr) :: errL2, errLinf
-  real(pr) :: gamma                   ! rapport des chaleurs pour Euler (cas 4)
 
-  real(pr), allocatable :: x(:), u(:,:), u_ex(:), xeff(:)
+  real(pr), allocatable :: x(:), u(:,:), u_ex(:,:), xeff(:)
   character(len=256) :: fichier_param
 
   !=======================================================
@@ -57,7 +56,6 @@ program advection_rusanov
      nvar  = 1       ! advection scalaire
   case (4)
      nvar  = 3       ! Euler 1D : (rho, rho*u, E)
-     gamma = 1.4_pr  ! gaz parfait
   case default
      write(*,*) "Erreur: cas_test inconnu = ", cas_test
      stop
@@ -80,7 +78,7 @@ program advection_rusanov
   if (cas_test /= 4) then
     !----------------------------------------------
     ! Cas 1–3 : advection scalaire
-    ! u(i,1) = C_init(i_CI, x(i))
+    ! u(i,1) = C_init(i_CI, x(i)write(*,*) "Pas d’erreur analytique )
     !----------------------------------------------
     do i = 1, nx
        u(i,1) = C_init(i_CI, x(i))
@@ -91,7 +89,7 @@ program advection_rusanov
     ! Cas 4 : Euler – tube de choc de Sod
     ! u(:,1) = rho, u(:,2) = rho*u, u(:,3) = E
     !----------------------------------------------
-    call init_euler_sod(x, u, gamma, L)
+    call init_euler_sod(x, u, L)
   end if
 
   !=======================================================
@@ -139,11 +137,11 @@ program advection_rusanov
   !=======================================================
 
   if (cas_test /= 4) then
-     allocate(u_ex(nx))
-     u_ex = U_exa(cas_test, x, t, a, L)
-
-     errL2   = erreur_L2(u_ex, u(:,1), dx)
-     errLinf = erreur_Linf(u_ex, u(:,1))
+     allocate(u_ex(nx,1))
+     u_ex(:,1) = U_exa(cas_test, x, t, a, L)
+   
+     errL2   = erreur_L2(u_ex, u, dx)
+     errLinf = erreur_Linf(u_ex, u)
 
      write(*,'(A25, ES10.3)')  "  Erreur L2:",   errL2
      write(*,'(A25, ES10.3)')  "  Erreur Linf:", errLinf
@@ -154,7 +152,27 @@ program advection_rusanov
 
      deallocate(u_ex)
   else
-     write(*,*) "Pas d’erreur analytique pour Euler (cas 4)"
+   allocate(u_ex(nx,3))
+   call sod_solution(u_ex, x, nx, t)
+   errL2   = erreur_L2(u_ex, u, dx)
+   errLinf = erreur_Linf(u_ex, u)
+
+   do i = 1,3
+      print *, "uex(:,",i," )=", u_ex(:,i)
+      print *, "-------------------------------------"
+      print *, "u(:,",i," ) =", u(:,i)
+      print *, "-------------------------------------"   
+      print *, "uex(:,",i," ) - u(:,",i," ) =", u_ex(:,i) - u(:,i)
+      print *, "=====================================" 
+   end do
+     write(*,'(A25, ES10.3)')  "  Erreur L2:",   errL2
+     write(*,'(A25, ES10.3)')  "  Erreur Linf:", errLinf
+
+     open(unit=16, file="erreurs.dat", status="unknown", position="append", iostat=ios)
+     write(16,'(3ES16.8)') dx, errL2, errLinf
+     close(16)
+
+     deallocate(u_ex)
   end if
 
   !=======================================================
