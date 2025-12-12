@@ -62,13 +62,13 @@ contains
     do i = 1, nx
       if (x(i) < 0.5*L) then
         ! gauche
-        E      = pL/(gamma - 1.0) + 0.5*rhoL*uL*uL
+        E      = pL/(gamma - 1.0_pr) + 0.5*rhoL*uL*uL
         U(i,1) = rhoL
         U(i,2) = rhoL*uL
         U(i,3) = E
       else
         ! droite
-        E      = pR/(gamma - 1.0) + 0.5*rhoR*uR*uR
+        E      = p_R/(gamma - 1.0_pr) + 0.5*rhoR*uR*uR
         U(i,1) = rhoR
         U(i,2) = rhoR*uR
         U(i,3) = E

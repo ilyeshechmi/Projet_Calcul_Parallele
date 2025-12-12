@@ -1,122 +1,109 @@
 module Euler_mod
   use precision_mod
   implicit none
-
 contains
 
-  !-------------------------------------------------------
-  ! Conservé -> primitif : (rho, m, E) -> (rho, u, p)
-  ! Uv(1) = rho, Uv(2) = rho*u, Uv(3) = E
-  !-------------------------------------------------------
-  subroutine cons_to_prim(Uv, rho, uvel, p, gamma)
-    real(pr), intent(in)  :: Uv(3)
-    real(pr), intent(in)  :: gamma
-    real(pr), intent(out) :: rho, uvel, p
+  !========================================================
+  ! Conversion conservatif -> primitif
+  ! Uc = [rho, rho*vel, E]
+  !========================================================
+  subroutine cons_to_prim(Uc, rho, vel, pres)
+    real(pr), intent(in)  :: Uc(3)
+    real(pr), intent(out) :: rho, vel, pres
     real(pr) :: E, kinetic
 
-    rho   = Uv(1)
-    uvel  = Uv(2) / rho
-    E     = Uv(3)
-    kinetic = 0.5 * rho * uvel*uvel
-    p     = (gamma - 1.0) * (E - kinetic)
+    rho = Uc(1)
+    vel = Uc(2) / rho
+    E   = Uc(3)
+
+    kinetic = 0.5_pr * rho * vel * vel
+    pres    = (gamma - 1._pr) * (E - kinetic)
   end subroutine cons_to_prim
 
-  !-------------------------------------------------------
-  ! Flux physique F(U)
-  !-------------------------------------------------------
-  subroutine flux_euler(Uv, F, gamma)
-    real(pr), intent(in)  :: Uv(3)
-    real(pr), intent(in)  :: gamma
-    real(pr), intent(out) :: F(3)
-    real(pr) :: rho, uvel, p, E
 
-    call cons_to_prim(Uv, rho, uvel, p, gamma)
-    E = Uv(3)
+  !========================================================
+  ! Flux physique Euler F(U)
+  !========================================================
+  function flux_euler(Uc) result(F)
+    real(pr), intent(in) :: Uc(3)
+    real(pr) :: F(3)
+    real(pr) :: rho, vel, pres
 
-    F(1) = rho*uvel
-    F(2) = rho*uvel*uvel + p
-    F(3) = uvel*(E + p)
-  end subroutine flux_euler
+    call cons_to_prim(Uc, rho, vel, pres)
 
-  !-------------------------------------------------------
-  ! Vitesse max de propagation : |u| + c
-  !-------------------------------------------------------
-  function max_wave_speed(ULv, URv, gamma) result(smax)
-    real(pr), intent(in) :: ULv(3), URv(3)
-    real(pr), intent(in) :: gamma
+    F(1) = rho * vel
+    F(2) = rho * vel * vel + pres
+    F(3) = vel * (Uc(3) + pres)
+  end function flux_euler
+
+
+  !========================================================
+  ! Vitesse max de propagation |u| + c
+  !========================================================
+  function max_wave_speed_euler(UcL, UcR) result(smax)
+    real(pr), intent(in) :: UcL(3), UcR(3)
     real(pr) :: smax
-    real(pr) :: rhoL, uL, pL, rhoR, uR, pR, cL, cR
+    real(pr) :: rhoL, velL, presL
+    real(pr) :: rhoR, velR, presR
+    real(pr) :: cL, cR
 
-    call cons_to_prim(ULv, rhoL, uL, pL, gamma)
-    call cons_to_prim(URv, rhoR, uR, pR, gamma)
+    call cons_to_prim(UcL, rhoL, velL, presL)
+    call cons_to_prim(UcR, rhoR, velR, presR)
 
-    cL = sqrt(gamma * pL / rhoL)
-    cR = sqrt(gamma * pR / rhoR)
+    cL = sqrt(gamma * presL / rhoL)
+    cR = sqrt(gamma * presR / rhoR)
 
-    smax = max( abs(uL) + cL, abs(uR) + cR )
-  end function max_wave_speed
+    smax = max( abs(velL) + cL, abs(velR) + cR )
+  end function max_wave_speed_euler
 
-  !-------------------------------------------------------
+
+  !========================================================
   ! Flux numérique de Rusanov pour Euler
-  !-------------------------------------------------------
-  subroutine flux_rusanov_euler(ULv, URv, Fnum, gamma)
-    real(pr), intent(in)  :: ULv(3), URv(3)
-    real(pr), intent(in)  :: gamma
-    real(pr), intent(out) :: Fnum(3)
-    real(pr) :: FL(3), FR(3), smax
+  !========================================================
+  function flux_rusanov_euler(UcL, UcR) result(Fnum)
+    real(pr), intent(in) :: UcL(3), UcR(3)
+    real(pr) :: Fnum(3)
+    real(pr) :: FL(3), FR(3)
+    real(pr) :: smax
 
-    call flux_euler(ULv, FL, gamma)
-    call flux_euler(URv, FR, gamma)
-    smax = max_wave_speed(ULv, URv, gamma)
+    FL = flux_euler(UcL)
+    FR = flux_euler(UcR)
 
-    Fnum(:) = 0.5*(FL(:) + FR(:)) - 0.5*smax*(URv(:) - ULv(:))
-  end subroutine flux_rusanov_euler
+    smax = max_wave_speed_euler(UcL, UcR)
 
-  !-------------------------------------------------------
-  ! Avancement en temps Rusanov pour Euler
-  ! U est de taille (nx,3) : U(i,1)=rho, U(i,2)=rho*u, U(i,3)=E
-  !-------------------------------------------------------
-  subroutine avancer_rusanov_euler(U, dx, dt, gamma)
-    real(pr), intent(inout) :: U(:,:)     ! (nx,3)
-    real(pr), intent(in)    :: dx, dt, gamma
-    integer :: nx, i
-    real(pr), allocatable :: Unp1(:,:), ULv(:), URv(:), Fg(:), Fd(:)
+    Fnum = 0.5_pr * (FL + FR) - 0.5_pr * smax * (UcR - UcL)
+  end function flux_rusanov_euler
 
-    nx = size(U, 1)   ! nb de points d'espace
 
-    allocate(Unp1(nx,3), ULv(3), URv(3), Fg(3), Fd(3))
+  !========================================================
+  ! CFL Euler : dt = CFL * dx / max(|u|+c)
+  !========================================================
+  function dt_CFL_euler(U, dx, CFL) result(dt)
+    real(pr), intent(in) :: U(:,:), dx, CFL
+    real(pr) :: dt
+    integer :: i, nx
+    real(pr) :: rho, vel, pres, c
+    real(pr) :: smax
+    real(pr) :: Uc(3)
 
-    ! --- CL simples : on gèle les bords (copy) ---
+    nx   = size(U,1)
+    smax = 0._pr
+
     do i = 1, nx
-       ! flux à gauche
-       if (i == 1) then
-          ULv = U(1,:)
-          URv = U(1,:)
-       else
-          ULv = U(i-1,:)
-          URv = U(i,:)
-       end if
-       call flux_rusanov_euler(ULv, URv, Fg, gamma)
+       Uc = U(i,:)
+       call cons_to_prim(Uc, rho, vel, pres)
 
-       ! flux à droite
-       if (i == nx) then
-          ULv = U(nx,:)
-          URv = U(nx,:)
-       else
-          ULv = U(i,:)
-          URv = U(i+1,:)
+       if (rho <= 0._pr .or. pres <= 0._pr) then
+          write(*,*) "ERREUR: état non physique, i=", i
+          write(*,*) "U =", Uc
+          stop
        end if
-       call flux_rusanov_euler(ULv, URv, Fd, gamma)
 
-       Unp1(i,:) = U(i,:) - (dt/dx)*(Fd(:) - Fg(:))
+       c    = sqrt(gamma * pres / rho)
+       smax = max(smax, abs(vel) + c)
     end do
 
-    U(:,:) = Unp1(:,:)
-
-    deallocate(Unp1, ULv, URv, Fg, Fd)
-  end subroutine avancer_rusanov_euler
-
-
-
+    dt = CFL * dx / smax
+  end function dt_CFL_euler
 
 end module Euler_mod

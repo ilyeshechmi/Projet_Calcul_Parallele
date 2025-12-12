@@ -6,25 +6,26 @@ program advection_rusanov
   use schema_rusanov_mod
   use initialiser_mod
   use Euler_mod
+  use exact_sod_mod
   implicit none
 
   !---------------- Variables & paramètres ----------------
   type(Parametres) :: params
   integer  :: nx, nsteps, n, save_every
-  integer  :: i, cl_periodique, cas_test
+  integer  :: i, cl_periodique, cas_test,i_schema
   integer  :: nargs, i_CI, i_CL, ios
   integer  :: nvar                    ! nb de variables : 1 (advection) ou 3 (Euler)
 
-  real(pr) :: L, a, dt, Tfinal, dx, t, cfl
+  real(pr) :: L, dt, Tfinal, dx, t, cfl
   real(pr) :: errL2, errLinf
 
-  real(pr), allocatable :: x(:), u(:,:), u_ex(:,:), xeff(:)
+  real(pr), allocatable :: x(:), u(:,:), u_ex(:,:), xeff(:),a(:)
   character(len=256) :: fichier_param
 
   !=======================================================
   ! 1) Lecture du fichier de paramètres
   !=======================================================
-
+   allocate(a(1))
   nargs = command_argument_count()
   if (nargs < 1) then
     write(*,*) "Erreur: Veuillez fournir le fichier de paramètres en argument."
@@ -37,7 +38,7 @@ program advection_rusanov
   cas_test   = params%cas_test
   nx         = params%nx
   L          = params%L
-  a          = params%a
+  a(:)          = params%a
   Tfinal     = params%T_final
   save_every = params%save_every
   CFL        = params%CFL
@@ -103,21 +104,23 @@ program advection_rusanov
   !=======================================================
   ! 6) Boucle en temps
   !=======================================================
-
+  
   nsteps = ceiling( Tfinal / dt )
   n      = 0
-
+  i_schema =0
   do while (t < Tfinal)
-
+   if ( cas_test ==4  ) then
+      !dt = dt_CFL_euler(u, dx, CFL)
+   end if
     if (t + dt > Tfinal) then
       dt = Tfinal - t
     end if
+   !  if (cas_test /= 4) then
+       call avancer_Rusanov(u(:,:), x,a(:), dx, dt, cl_periodique, t, i_CL,i_schema,cas_test)
+   !  else
+   !     call avancer_rusanov_euler(u, dx, dt)
+   !  end if
 
-    if (cas_test /= 4) then
-       call avancer_Rusanov(u(:,1), a, dx, dt, cl_periodique, t, i_CL)
-    else
-       call avancer_rusanov_euler(u, dx, dt, gamma)
-    end if
 
     t = t + dt
     n = n + 1
@@ -138,7 +141,7 @@ program advection_rusanov
 
   if (cas_test /= 4) then
      allocate(u_ex(nx,1))
-     u_ex(:,1) = U_exa(cas_test, x, t, a, L)
+     u_ex(:,1) = U_exa(cas_test, x, t, a(1), L)
    
      errL2   = erreur_L2(u_ex, u, dx)
      errLinf = erreur_Linf(u_ex, u)
@@ -157,14 +160,14 @@ program advection_rusanov
    errL2   = erreur_L2(u_ex, u, dx)
    errLinf = erreur_Linf(u_ex, u)
 
-   do i = 1,3
-      print *, "uex(:,",i," )=", u_ex(:,i)
-      print *, "-------------------------------------"
-      print *, "u(:,",i," ) =", u(:,i)
-      print *, "-------------------------------------"   
-      print *, "uex(:,",i," ) - u(:,",i," ) =", u_ex(:,i) - u(:,i)
-      print *, "=====================================" 
-   end do
+   ! do i = 1,3
+   !    print *, "uex(:,",i," )=", u_ex(:,i)
+   !    print *, "-------------------------------------"
+   !    print *, "u(:,",i," ) =", u(:,i)
+   !    print *, "-------------------------------------"   
+   !    print *, "uex(:,",i," ) - u(:,",i," ) =", u_ex(:,i) - u(:,i)
+   !    print *, "=====================================" 
+   ! end do
      write(*,'(A25, ES10.3)')  "  Erreur L2:",   errL2
      write(*,'(A25, ES10.3)')  "  Erreur Linf:", errLinf
 

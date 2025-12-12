@@ -1,42 +1,89 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-# ==========================
-# Données (dx, errL2)
-# ==========================
-dx = np.array([5.0e-2, 2.5e-2, 1.66666667e-2, 1.0e-2 ])
-err = np.array([1.39353182e-1, 7.71124245e-2, 5.33375019e-2, 3.30017412e-2])
+# ===========================================
+# 1) Lecture automatique du fichier erreurs.dat
+# ===========================================
 
-# On trie (pour un joli tracé)
+fname = "erreurs.dat"
+
+if not os.path.exists(fname):
+    raise FileNotFoundError("Le fichier erreurs.dat n'existe pas !")
+
+# Lecture automatique
+data = np.loadtxt(fname)
+
+# Une seule ligne
+if data.ndim == 1:
+    data = data.reshape(1, -1)
+
+# ===========================================
+# 2) Extract columns (dx, L2, Linf)
+# ===========================================
+if data.shape[1] == 2:
+    # Format ancien : dx L2
+    dx = data[:,0]
+    errL2 = data[:,1]
+    errLinf = None
+elif data.shape[1] >= 3:
+    # Format complet : dx L2 Linf
+    dx = data[:,0]
+    errL2 = data[:,1]
+    errLinf = data[:,2]
+else:
+    raise ValueError("Format inconnu dans erreurs.dat !")
+
+# ===========================================
+# 3) Tri pour un tracé propre
+# ===========================================
 p = np.argsort(dx)
 dx = dx[p]
-err = err[p]
+errL2 = errL2[p]
+if errLinf is not None:
+    errLinf = errLinf[p]
 
-# ==========================
-# Régression linéaire en log-log
-# ==========================
-log_dx = np.log(dx)
-log_err = np.log(err)
+# ===========================================
+# 4) Régression linéaire log-log
+# ===========================================
 
-coef = np.polyfit(log_dx, log_err, 1)
-slope, intercept = coef
+def regression_loglog(x, y):
+    logx = np.log(x)
+    logy = np.log(y)
+    slope, intercept = np.polyfit(logx, logy, 1)
+    fit = np.exp(intercept) * x**slope
+    return slope, fit
 
-print(f"Pente estimée (ordre de convergence) ≈ {slope:.3f}")
+# L2
+slope_L2, fit_L2 = regression_loglog(dx, errL2)
 
-# Droite ajustée
-fit = np.exp(intercept) * dx**slope
+print("\n========== Résultats ==========")
+print(f"Ordre de convergence L2   : p ≈ {slope_L2:.3f}")
 
-# ==========================
-# Plot
-# ==========================
-plt.figure(figsize=(7,5))
-plt.loglog(dx, err, 'o-', label="Erreur L2")
-plt.loglog(dx, fit, '--', label=f"Régression linéaire (pente = {slope:.2f})")
+if errLinf is not None:
+    slope_Linf, fit_Linf = regression_loglog(dx, errLinf)
+    print(f"Ordre de convergence Linf : p ≈ {slope_Linf:.3f}")
+else:
+    slope_Linf = None
+
+print("================================\n")
+
+# ===========================================
+# 5) Figures
+# ===========================================
+
+plt.figure(figsize=(8,6))
+plt.loglog(dx, errL2, 'o-', label="Erreur L2")
+plt.loglog(dx, fit_L2, '--', label=f"Régression L2 (p={slope_L2:.2f})")
+
+if errLinf is not None:
+    plt.loglog(dx, errLinf, 's-', label="Erreur Linf")
+    plt.loglog(dx, fit_Linf, '--', label=f"Régression Linf (p={slope_Linf:.2f})")
 
 plt.xlabel("dx")
-plt.ylabel("Erreur L2")
-plt.title("Convergence du schéma de Rusanov")
-plt.grid(True, which='both', ls='--')
+plt.ylabel("erreur")
+plt.title("Convergence du schéma (L2 et Linf)")
+plt.grid(True, which="both", ls="--")
 plt.legend()
 plt.tight_layout()
 plt.show()

@@ -1,16 +1,16 @@
 &input
-  cas_test   = 4      
+  cas_test   = 4    
   ! ------------------------------------------------------------
   ! cas_test = 1 : CI = gaussienne , CL = périodique
   ! cas_test = 2 : CI = nulle      , CL = constante (=1)
   ! cas_test = 3 : CI = 1       , CL = sinusoïdale de moyenne 1 
   ! ------------------------------------------------------------
 
-  nx         = 10        ! Nombre de points de discrétisation
+  nx         = 10     ! Nombre de points de discrétisation
   L          = 10.0       ! Longueur du domaine spatial
   a          = 2.0        ! Vitesse d’advection
-  CFL        = 0.8        ! Condition initiale
-  T_final    = 1.0         ! Temps final de la simulation
-  save_every = 10         ! Sauvegarde tous les n pas de temps
+  CFL        = 1.0     ! Condition initiale
+  T_final    = 1.0       ! Temps final de la simulation
+  save_every = 10        ! Sauvegarde tous les n pas de temps
   outfile    = 'resultats/results'   ! Préfixe des fichiers de sortie
 /
