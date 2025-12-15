@@ -26,10 +26,6 @@ program advection_rusanov
   real(pr) :: dx_f, dt_f, t_f
   real(pr), allocatable :: x_f(:), u_f(:,:), u_ref(:,:)
 
-    !=======================================================
-  ! Référence numérique sur maillage très fin (FIXE)
-  !=======================================================
-
 
   !=======================================================
   ! 1) Lecture du fichier de paramètres
@@ -142,9 +138,11 @@ program advection_rusanov
   write(*,*) "============================================================"
 
   !=======================================================
-  ! 7) Erreur (advection uniquement)
+  ! 7) Erreur 
   !=======================================================
-  ! Erreur sur un maillage de réference de taille N_f
+!   !=======================================================
+!   ! Référence numérique sur maillage très fin (FIXE)
+!   !=======================================================
 !   dx_f = L / real(Nf_ref, pr)
 
 !   allocate(x_f(Nf_ref), u_f(Nf_ref,nvar))
@@ -164,19 +162,19 @@ program advection_rusanov
 !   t_f  = 0._pr
 
 
-  ! do while (t_f < Tfinal)
-  !   if ( cas_test /= 4 ) then
-  !     dt_f =  dt_CFL_euler(u_f, dx_f, CFL)
-  !   end if 
+!   do while (t_f < Tfinal)
+!     if ( cas_test == 4 ) then
+!       dt_f =  dt_CFL_euler(u_f, dx_f, CFL)
+!     end if 
 
-  !   if (t_f + dt_f > Tfinal) then 
-  !     dt_f = Tfinal - t_f
-  !   end if 
+!     if (t_f + dt_f > Tfinal) then 
+!       dt_f = Tfinal - t_f
+!     end if 
 
-  !   call avancer_Rusanov(u_f, x_f, a, dx_f, dt_f, cl_periodique, t_f, i_CL, i_schema, cas_test)
+!     call avancer_Rusanov(u_f, x_f, a, dx_f, dt_f, cl_periodique, t_f, i_CL, i_schema, cas_test)
 
-  !   t_f = t_f + dt_f
-  ! end do
+!     t_f = t_f + dt_f
+!   end do
 
 ! !=======================================================
 ! ! Restriction de la référence fine vers la grille grossière
@@ -191,15 +189,15 @@ program advection_rusanov
 !   allocate(u_ref(nx,nvar))
 !   u_ref(:,:) = 0._pr
 
-  ! do i = 1, nx
-  !   i0 = (i-1)*r_ref ! indice de départ dans la grille fine
-  !   do k = 1, r_ref
-  !     do m = 1, nvar
-  !       u_ref(i,m) = u_ref(i,m) + u_f(i0+k,m) 
-  !     end do
-  !   end do
-  !   u_ref(i,:) = u_ref(i,:) / real(r_ref,pr) ! moyenne des cellules fines contenue dans la cellule grossière
-  ! end do
+!   do i = 1, nx
+!     i0 = (i-1)*r_ref ! indice de départ dans la grille fine
+!     do k = 1, r_ref
+!       do m = 1, nvar
+!         u_ref(i,m) = u_ref(i,m) + u_f(i0+k,m) 
+!       end do
+!     end do
+!     u_ref(i,:) = u_ref(i,:) / real(r_ref,pr) ! moyenne des cellules fines contenue dans la cellule grossière
+!   end do
 
   if (cas_test /= 4) then
     allocate(u_ex(nx,1))
@@ -229,9 +227,9 @@ program advection_rusanov
     errLinf = erreur_Linf(u_ex, u)
     errL1   = erreur_L1(u_ex, u, dx)
 
-   ! errL2   = erreur_L2(u_ref, u, dx)
-   ! errLinf = erreur_Linf(u_ref, u)
-   ! errL1   = erreur_L1(u_ref, u, dx)
+   errL2   = erreur_L2(u_ref, u, dx)
+   errLinf = erreur_Linf(u_ref, u)
+   errL1   = erreur_L1(u_ref, u, dx)
 
     write(*,'(A25, ES10.3)')  "  Erreur L1:", errL1
     write(*,'(A25, ES10.3)')  "  Erreur L2:",   errL2
