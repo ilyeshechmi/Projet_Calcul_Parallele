@@ -110,7 +110,7 @@ contains
     ! Écriture
     write(uo,'(a,1x,a)') '#t=', trim(t_str)
     do i = 1, size(x)
-        write(uo,'(2(ES20.10,1X))') x(i), u(i,:)
+        write(uo,'(*(ES20.10,1X))') x(i), u(i,:)
     end do
     close(uo)
     end subroutine ecrire

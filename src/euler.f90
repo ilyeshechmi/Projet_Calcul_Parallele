@@ -8,7 +8,7 @@ contains
   ! Uc = [rho, rho*vel, E]
   !========================================================
   subroutine cons_to_prim(Uc, rho, vel, pres)
-    real(pr), intent(in)  :: Uc(3)
+    real(pr), intent(in)  :: Uc(:)
     real(pr), intent(out) :: rho, vel, pres
     real(pr) :: E, kinetic
 
@@ -25,8 +25,8 @@ contains
   ! Flux physique Euler F(U)
   !========================================================
   function flux_euler(Uc) result(F)
-    real(pr), intent(in) :: Uc(3)
-    real(pr) :: F(3)
+    real(pr), intent(in) :: Uc(:)
+    real(pr) :: F(size(Uc))
     real(pr) :: rho, vel, pres
 
     call cons_to_prim(Uc, rho, vel, pres)
@@ -58,24 +58,6 @@ contains
 
 
   !========================================================
-  ! Flux numérique de Rusanov pour Euler
-  !========================================================
-  function flux_rusanov_euler(UcL, UcR) result(Fnum)
-    real(pr), intent(in) :: UcL(3), UcR(3)
-    real(pr) :: Fnum(3)
-    real(pr) :: FL(3), FR(3)
-    real(pr) :: smax
-
-    FL = flux_euler(UcL)
-    FR = flux_euler(UcR)
-
-    smax = max_wave_speed_euler(UcL, UcR)
-
-    Fnum = 0.5_pr * (FL + FR) - 0.5_pr * smax * (UcR - UcL)
-  end function flux_rusanov_euler
-
-
-  !========================================================
   ! CFL Euler : dt = CFL * dx / max(|u|+c)
   !========================================================
   function dt_CFL_euler(U, dx, CFL) result(dt)
@@ -90,17 +72,17 @@ contains
     smax = 0._pr
 
     do i = 1, nx
-       Uc = U(i,:)
-       call cons_to_prim(Uc, rho, vel, pres)
+      Uc = U(i,:)
+      call cons_to_prim(Uc, rho, vel, pres)
+      
+      if (rho <= 0._pr .or. pres <= 0._pr) then
+        write(*,*) "ERREUR: état non physique, i=", i
+        write(*,*) "U =", Uc
+        stop
+      end if
 
-       if (rho <= 0._pr .or. pres <= 0._pr) then
-          write(*,*) "ERREUR: état non physique, i=", i
-          write(*,*) "U =", Uc
-          stop
-       end if
-
-       c    = sqrt(gamma * pres / rho)
-       smax = max(smax, abs(vel) + c)
+      c    = sqrt(gamma * pres / rho)
+      smax = max(smax, abs(vel) + c)
     end do
 
     dt = CFL * dx / smax

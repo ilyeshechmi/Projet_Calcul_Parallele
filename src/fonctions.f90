@@ -49,6 +49,7 @@ contains
   !========================
   ! Solution exacte advection
   !========================
+  
   function U_exa(cas_test, x, t, a, L) result(u_ex)
     integer,  intent(in) :: cas_test
     real(pr), intent(in) :: x(:), t, a, L
@@ -56,31 +57,88 @@ contains
     real(pr), allocatable :: xeff(:)
     integer :: i, nx
     integer :: i_CI, i_CL, CL_periodique
+    real(pr) :: xb, tb
 
     call initialiser(cas_test, i_CL, i_CI, CL_periodique)
 
     nx = size(x)
     allocate(u_ex(nx), xeff(nx))
 
-    do i = 1, nx
-      if (CL_periodique == 1) then
+    if (CL_periodique == 1) then
+      do i = 1, nx
         xeff(i) = modulo(x(i) - a*t, L)
         u_ex(i) = C_init(i_CI, xeff(i))
-      else
-        if (x(i) - a*t > 0._pr) then
-          u_ex(i) = C_init(i_CI, x(i) - a*t)
+      end do
+      deallocate(xeff)
+      return
+    end if
+
+    ! --------- NON PERIODIQUE ----------
+    if (a > 0._pr) then
+      ! inflow à gauche : x=0
+      do i = 1, nx
+        xb = x(i) - a*t   ! pied de caractéristique à t=0
+        if (xb >= 0._pr) then
+          u_ex(i) = C_init(i_CI, xb)
         else
-          u_ex(i) = C_limite(i_CL, t)
+          tb = t - x(i)/a          ! temps d'entrée sur le bord gauche
+          u_ex(i) = C_limite(i_CL, tb)
         end if
-      end if
-    end do
+      end do
+
+    else if (a < 0._pr) then
+      ! inflow à droite : x=L
+      do i = 1, nx
+        xb = x(i) - a*t   ! = x + |a| t
+        if (xb <= L) then
+          u_ex(i) = C_init(i_CI, xb)
+        else
+          tb = t - (L - x(i))/(-a) ! temps d'entrée sur le bord droit
+          u_ex(i) = C_limite(i_CL, tb)
+        end if
+      end do
+
+    else
+      ! a = 0 : pas d'advection
+      do i = 1, nx
+        u_ex(i) = C_init(i_CI, x(i))
+      end do
+    end if
 
     deallocate(xeff)
   end function U_exa
 
+
   !========================
-  ! Erreurs (matrices nx x dim)
+  ! Erreurs (matriciel nx x dim)
   !========================
+  function erreur_L1(u_exact, u_num, dx) result(errL1)
+    real(pr), intent(in) :: u_exact(:,:), u_num(:,:)
+    real(pr), intent(in) :: dx
+    real(pr) :: errL1
+    integer  :: i, m, nx, dim
+    real(pr) :: num_sum, den_sum
+
+    nx  = size(u_exact,1)
+    dim = size(u_exact,2)
+
+    num_sum = 0._pr
+    den_sum = 0._pr
+
+    do i = 1, nx
+      do m = 1, dim
+        num_sum = num_sum + dx * abs(u_exact(i,m) - u_num(i,m))
+        den_sum = den_sum + dx * abs(u_exact(i,m))
+      end do
+    end do
+
+    if (den_sum <= 0._pr) then
+      errL1 = num_sum   
+    else
+      errL1 = num_sum / den_sum
+    end if
+  end function erreur_L1
+
   function erreur_L2(u_exact, u_num, dx) result(errL2)
     real(pr), intent(in) :: u_exact(:,:), u_num(:,:)
     real(pr), intent(in) :: dx
@@ -102,7 +160,7 @@ contains
     end do
 
     if (den_sum <= 0._pr) then
-      errL2 = sqrt(num_sum)   ! fallback si référence nulle
+      errL2 = sqrt(num_sum)   
     else
       errL2 = sqrt(num_sum / den_sum)
     end if
@@ -152,6 +210,13 @@ contains
 
   end select
 end function source_term
+
+function flux_advection(a, u) result(FU)
+  real(pr), intent(in) :: a(:), u(:)
+  real(pr) :: FU(size(u))
+
+  FU(:) = a(:) * u(:)
+end function flux_advection
 
 
 end module fonctions_mod

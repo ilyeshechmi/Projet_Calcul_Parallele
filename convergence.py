@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 
 # ===========================================
-# 1) Lecture automatique du fichier erreurs.dat
+# 1) Lecture du fichier erreurs.dat
 # ===========================================
 
 fname = "erreurs.dat"
@@ -11,57 +11,85 @@ fname = "erreurs.dat"
 if not os.path.exists(fname):
     raise FileNotFoundError("Le fichier erreurs.dat n'existe pas !")
 
-# Lecture automatique
 data = np.loadtxt(fname)
 
-# Une seule ligne
 if data.ndim == 1:
     data = data.reshape(1, -1)
 
 # ===========================================
-# 2) Extract columns (dx, L2, Linf)
+# 2) Extraction des colonnes
+# Formats possibles :
+# dx L2
+# dx L2 Linf
+# dx L1 L2
+# dx L1 L2 Linf
 # ===========================================
+
+dx = data[:, 0]
+
+errL1 = None
+errL2 = None
+errLinf = None
+
 if data.shape[1] == 2:
-    # Format ancien : dx L2
-    dx = data[:,0]
-    errL2 = data[:,1]
-    errLinf = None
-elif data.shape[1] >= 3:
-    # Format complet : dx L2 Linf
-    dx = data[:,0]
-    errL2 = data[:,1]
-    errLinf = data[:,2]
+    errL2 = data[:, 1]
+
+elif data.shape[1] == 3:
+    errL1 = data[:, 1]
+    errL2 = data[:, 2]
+
+elif data.shape[1] >= 4:
+    errL1   = data[:, 1]
+    errL2   = data[:, 2]
+    errLinf = data[:, 3]
+
 else:
-    raise ValueError("Format inconnu dans erreurs.dat !")
+    raise ValueError("Format inconnu dans erreurs.dat")
 
 # ===========================================
-# 3) Tri pour un tracé propre
+# 3) Tri croissant en dx
 # ===========================================
+
 p = np.argsort(dx)
 dx = dx[p]
-errL2 = errL2[p]
+
+if errL1 is not None:
+    errL1 = errL1[p]
+if errL2 is not None:
+    errL2 = errL2[p]
 if errLinf is not None:
     errLinf = errLinf[p]
 
 # ===========================================
-# 4) Régression linéaire log-log
+# 4) Régression log-log (avec filtrage des zéros)
 # ===========================================
 
 def regression_loglog(x, y):
+    mask = (x > 0) & (y > 0)
+    x = x[mask]
+    y = y[mask]
     logx = np.log(x)
     logy = np.log(y)
     slope, intercept = np.polyfit(logx, logy, 1)
     fit = np.exp(intercept) * x**slope
-    return slope, fit
-
-# L2
-slope_L2, fit_L2 = regression_loglog(dx, errL2)
+    return slope, fit, x
 
 print("\n========== Résultats ==========")
-print(f"Ordre de convergence L2   : p ≈ {slope_L2:.3f}")
+
+if errL1 is not None:
+    slope_L1, fit_L1, dx_L1 = regression_loglog(dx, errL1)
+    print(f"Ordre de convergence L1   : p ≈ {slope_L1:.3f}")
+else:
+    slope_L1 = None
+
+if errL2 is not None:
+    slope_L2, fit_L2, dx_L2 = regression_loglog(dx, errL2)
+    print(f"Ordre de convergence L2   : p ≈ {slope_L2:.3f}")
+else:
+    slope_L2 = None
 
 if errLinf is not None:
-    slope_Linf, fit_Linf = regression_loglog(dx, errLinf)
+    slope_Linf, fit_Linf, dx_Linf = regression_loglog(dx, errLinf)
     print(f"Ordre de convergence Linf : p ≈ {slope_Linf:.3f}")
 else:
     slope_Linf = None
@@ -69,20 +97,26 @@ else:
 print("================================\n")
 
 # ===========================================
-# 5) Figures
+# 5) Tracé
 # ===========================================
 
 plt.figure(figsize=(8,6))
-plt.loglog(dx, errL2, 'o-', label="Erreur L2")
-plt.loglog(dx, fit_L2, '--', label=f"Régression L2 (p={slope_L2:.2f})")
+
+if errL1 is not None:
+    plt.loglog(dx, errL1, 'o-', label="Erreur L1")
+    plt.loglog(dx_L1, fit_L1, '--', label=f"Régression L1 (p={slope_L1:.2f})")
+
+if errL2 is not None:
+    plt.loglog(dx, errL2, 's-', label="Erreur L2")
+    plt.loglog(dx_L2, fit_L2, '--', label=f"Régression L2 (p={slope_L2:.2f})")
 
 if errLinf is not None:
-    plt.loglog(dx, errLinf, 's-', label="Erreur Linf")
-    plt.loglog(dx, fit_Linf, '--', label=f"Régression Linf (p={slope_Linf:.2f})")
+    plt.loglog(dx, errLinf, 'd-', label="Erreur Linf")
+    plt.loglog(dx_Linf, fit_Linf, '--', label=f"Régression Linf (p={slope_Linf:.2f})")
 
 plt.xlabel("dx")
 plt.ylabel("erreur")
-plt.title("Convergence du schéma (L2 et Linf)")
+plt.title("Convergence du schéma (L1, L2, Linf)")
 plt.grid(True, which="both", ls="--")
 plt.legend()
 plt.tight_layout()
