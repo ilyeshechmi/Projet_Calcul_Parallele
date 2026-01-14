@@ -227,7 +227,7 @@ contains
   !====================================================
   ! CAS PERIODIQUE
   !====================================================
-  if (cl_periodique == 1) then
+  if (cl_periodique == 1 .or. cas_test == 4) then
      do i = 0, nx
         il = i
         if (il < 1) il = nx
@@ -249,25 +249,21 @@ contains
   !====================================================
   ! CAS NON PERIODIQUE : valeurs fantômes
   !====================================================
-  if (cas_test == 4) then
-     ! Euler : extrapolation aux deux bords
-     uL_bc(:) = u(1,:)
-     uR_bc(:) = u(nx,:)
+   
+  ! Advection inflow / outflow (dim = 1 attendu)
+  if (a(1) > 0._pr) then
+      uL_bc(1) = C_limite(i_CL, t)
+      uR_bc(1) = u(nx,1)
   else
-     ! Advection inflow / outflow (dim = 1 attendu)
-     if (a(1) > 0._pr) then
-        uL_bc(1) = C_limite(i_CL, t)
-        uR_bc(1) = u(nx,1)
-     else
-        uL_bc(1) = u(1,1)
-        uR_bc(1) = C_limite(i_CL, t)
-     end if
-
-     if (dim > 1) then
-        uL_bc(2:dim) = u(1,2:dim)
-        uR_bc(2:dim) = u(nx,2:dim)
-     end if
+      uL_bc(1) = u(1,1)
+      uR_bc(1) = C_limite(i_CL, t)
   end if
+
+   if (dim > 1) then
+      uL_bc(2:dim) = u(1,2:dim)
+      uR_bc(2:dim) = u(nx,2:dim)
+   end if
+
 
   !====================================================
   ! Interfaces

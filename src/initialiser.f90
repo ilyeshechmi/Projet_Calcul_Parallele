@@ -40,41 +40,27 @@ contains
   ! CI du tube de choc de Sod
   ! U est (nx,3) : (rho, rho*u, E)
   !-------------------------------------------------------
-  subroutine init_euler_sod(x, U, L)
+  subroutine init_euler(x, U, L,rho0)
     use precision_mod
     implicit none
-    real(pr), intent(in)  :: x(:), L
+    real(pr), intent(in)  :: x(:), L,rho0
     real(pr), intent(out) :: U(:,:)         ! (nx,3)
     integer :: i, nx
-    real(pr) :: rhoL, uL, pL, rhoR, uR, p_R, E
+    real(pr) :: rho, V, p, E
 
     nx = size(x)
 
-    ! États gauche et droite classiques du test de Sod
-    rhoL = 1.0
-    uL   = 0.0
-    pL   = 1.0
-
-    rhoR = 0.125
-    uR   = 0.0
-    p_R   = 0.1
+    ! États initiales
+    V = 1.0_pr; p = 2.0_pr
 
     do i = 1, nx
-      if (x(i) < 0.5*L) then
-        ! gauche
-        E      = pL/(gamma - 1.0_pr) + 0.5*rhoL*uL*uL
-        U(i,1) = rhoL
-        U(i,2) = rhoL*uL
-        U(i,3) = E
-      else
-        ! droite
-        E      = p_R/(gamma - 1.0_pr) + 0.5*rhoR*uR*uR
-        U(i,1) = rhoR
-        U(i,2) = rhoR*uR
-        U(i,3) = E
-      end if
+      rho = 1._pr +rho0*sin(2*pi*x(i))
+      E      = p/(gamma - 1.0_pr) + 0.5*rho*V*V
+      U(i,1) = rho
+      U(i,2) = rho*V
+      U(i,3) = E
     end do
-  end subroutine init_euler_sod
+  end subroutine init_euler 
 
 
 

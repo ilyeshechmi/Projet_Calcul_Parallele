@@ -16,13 +16,14 @@ program advection_rusanov
   integer  :: nargs, i_CI, i_CL, ios
   integer  :: nvar                    ! nb de variables : 1 (advection) ou 3 (Euler)
 
-  real(pr) :: L, dt, Tfinal, dx, t, cfl
+  real(pr) :: L, dt, Tfinal, dx, t, cfl,rho0
+  real(pr) :: rho, V, p,E
   real(pr) :: errL2, errLinf,errL1
 
   real(pr), allocatable :: x(:), u(:,:), u_ex(:,:), xeff(:),a(:)
   character(len=256) :: fichier_param
   integer, parameter :: Nf_ref = 20480   ! maillage de référence FIXE
-    integer :: nx_f, r_ref, k, m, i0
+  integer :: nx_f, r_ref, k, m, i0
   real(pr) :: dx_f, dt_f, t_f
   real(pr), allocatable :: x_f(:), u_f(:,:), u_ref(:,:)
 
@@ -97,7 +98,8 @@ program advection_rusanov
     ! Cas 4 : Euler – tube de choc de Sod
     ! u(:,1) = rho, u(:,2) = rho*u, u(:,3) = E
     !----------------------------------------------
-    call init_euler_sod(x, u, L)
+    rho0 =0.2_pr
+    call init_euler(x, u, L,rho0)
   end if
 
   !=======================================================
@@ -156,7 +158,7 @@ program advection_rusanov
 !       u_f(i,1) = C_init(i_CI, x_f(i))
 !     end do
 !   else
-!     call init_euler_sod(x_f, u_f, L)
+!     call init_euler(x_f, u_f, L)
 !   end if
 
 !   t_f  = 0._pr
@@ -222,14 +224,29 @@ program advection_rusanov
     
   else
     allocate(u_ex(nx,3))
-    call sod_solution(u_ex, x, nx, t)
+    if (Tfinal==1.0_pr) then
+      call init_euler(x, u_ex, L,rho0)
+    else
+      V = 1.0_pr; p = 2.0_pr
+      
+      do i = 1, nx
+        rho = 1._pr +rho0*sin(2*pi*(x(i)-Tfinal))
+        E      = p/(gamma - 1.0_pr) + 0.5*rho*V*V
+        u_ex(i,1) = rho
+        u_ex(i,2) = rho*V
+        u_ex(i,3) = E
+      end do  
+    end if
+  
+
+    
     errL2   = erreur_L2(u_ex, u, dx)
     errLinf = erreur_Linf(u_ex, u)
     errL1   = erreur_L1(u_ex, u, dx)
 
-   errL2   = erreur_L2(u_ref, u, dx)
-   errLinf = erreur_Linf(u_ref, u)
-   errL1   = erreur_L1(u_ref, u, dx)
+  !  errL2   = erreur_L2(u_ref, u, dx)
+  !  errLinf = erreur_Linf(u_ref, u)
+  !  errL1   = erreur_L1(u_ref, u, dx)
 
     write(*,'(A25, ES10.3)')  "  Erreur L1:", errL1
     write(*,'(A25, ES10.3)')  "  Erreur L2:",   errL2
