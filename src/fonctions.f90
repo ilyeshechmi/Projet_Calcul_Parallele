@@ -182,34 +182,43 @@ contains
   end function erreur_Linf
 
   function source_term(U, x, t, cas_test) result(S)
-  use precision_mod
-  implicit none
   real(pr), intent(in) :: U(:), x, t
   integer,  intent(in) :: cas_test
   real(pr) :: S(size(U))
+  real(pr) :: h, hU, heta, hw
+  real(pr) :: vel, eta, w
 
-  S(:) = 0._pr   ! par défaut : pas de source
+  ! Valeur par défaut
+  S(:) = 0._pr
 
   select case (cas_test)
 
   case (1,2,3)
-     ! -----------------
-     ! Advection scalaire
-     ! Exemple : source analytique
-     ! u_t + a u_x = sin(x)
-     ! -----------------
-     S( :) = 0._pr*sin(x)*t
-
+    S(:) = 0._pr
   case (4)
-     ! -----------------
-     ! Euler 1D
-     ! Exemple : force volumique (gravité)
-     ! -----------------
-     ! U = [rho, rho*u, E]
-     S(:) = 0._pr
+    S(:) = 0._pr
+  case (5)
+    h    = U(1)
+    hU   = U(2)
+    heta = U(3)
+    hw   = U(4)
+
+    vel = hU / h
+    eta = heta / h
+    w   = hw / h
+
+    S(1) = 0._pr
+    S(2) = (lambda*h)/(epsilon*Re) &
+         - (3._pr*vel)/(h*epsilon*Re)
+    S(3) = hw
+    S(4) = (1._pr/(alpha*beta))*(1._pr - eta/h) &
+         - (9._pr*epsilon/(2._pr*beta*eta*Re))*w
+    S(5) = 0._pr
 
   end select
+
 end function source_term
+
 
 function flux_advection(a, u) result(FU)
   real(pr), intent(in) :: a(:), u(:)
@@ -217,6 +226,42 @@ function flux_advection(a, u) result(FU)
 
   FU(:) = a(:) * u(:)
 end function flux_advection
+
+
+function flux_saint_venant(U) result(Fu)
+  real(pr), intent(in) :: U(5)
+  real(pr) :: Fu(5)
+  real(pr) :: h, hU, h_eta, h_w, p
+  real(pr) :: Uv, eta
+  real(pr) :: Press
+
+
+  h     = U(1)
+  hU    = U(2)
+  h_eta = U(3)
+  h_w   = U(4)
+  p     = U(5)
+
+  Uv  = hU / h
+  eta = h_eta / h
+
+  Press = (2._pr*lambda**2/225._pr)*h**5 + (cos(theta)/(2._pr*F**2))*h**2
+
+
+  Fu(1) = hU
+
+  Fu(2) = hU*Uv + Press &
+         + (eta/alpha)*(1._pr - eta/h) &
+         + (epsilon**2*kappa**2/(2._pr*F**2))*p**2
+
+  Fu(3) = h_eta * Uv
+
+  Fu(4) = h_w * Uv - (epsilon**2*kappa/(beta*F**2))*p
+
+  Fu  (5) = p*Uv - h_w/h
+
+end function flux_saint_venant
+
 
 
 end module fonctions_mod

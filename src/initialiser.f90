@@ -62,6 +62,26 @@ contains
     end do
   end subroutine init_euler 
 
+  subroutine init_saint_venant(u)
+  use precision_mod
+  implicit none
+
+  real(pr), intent(out) :: u(:,:)
+  integer :: i, nx
+
+  nx = size(u,1)
+
+  do i = 1, nx
+     u(i,1) = 1._pr   ! h
+     u(i,2) = 1._pr   ! hU = h*U
+     u(i,3) = 1._pr   ! hη
+     u(i,4) = 0._pr   ! hw
+     u(i,5) = 0._pr   ! p
+  end do
+
+end subroutine init_saint_venant
+
+
 
 
 

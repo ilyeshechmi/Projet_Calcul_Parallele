@@ -4,9 +4,11 @@
   ! cas_test = 1 : CI = gaussienne , CL = périodique
   ! cas_test = 2 : CI = nulle      , CL = constante (=1)
   ! cas_test = 3 : CI = 1       , CL = sinusoïdale de moyenne 1 
+  ! cas_test = 4 : CI = constante + sinus , CL = périodique
+  ! cas_test = 5 ; CI = exp LiuGollub , CL = Vibration + Neuman
   ! ------------------------------------------------------------
 
-  nx         = 5120 ! Nombre de points de discrétisation
+  nx         = 80 ! Nombre de points de discrétisation
   L          = 2.0       ! Longueur du domaine spatial
   a          = 2.0        ! Vitesse d’advection
   CFL        = 0.5     ! Condition initiale

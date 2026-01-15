@@ -9,7 +9,7 @@ set ylabel "u(x)"
 set grid
 
 # Optionnel : fixer les bornes des axes
-set xrange [0:10]
+set xrange [0:2]
 set yrange [-1:2]
 
 # Récupérer la liste des fichiers results_t* triés par le temps (numérique)
