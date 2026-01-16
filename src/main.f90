@@ -16,7 +16,7 @@ program advection_rusanov
   integer  :: nargs, i_CI, i_CL, ios
   integer  :: nvar                    ! nb de variables : 1 (advection) ou 3 (Euler)
 
-  real(pr) :: L, dt, Tfinal, dx, t, cfl,rho0
+  real(pr) :: L, dt, Tfinal, dx, t, cfl
   real(pr) :: rho, V, p,E
   real(pr) :: errL2, errLinf,errL1
 
@@ -63,6 +63,8 @@ program advection_rusanov
      nvar  = 1       ! advection scalaire
   case (4)
      nvar  = 3       ! Euler 1D : (rho, rho*u, E)
+  case (5)
+     nvar  = 5       ! Saint-Venant 1D : (h, h*U, h*eta, h*w, A)
   case default
      write(*,*) "Erreur: cas_test inconnu = ", cas_test
      stop
@@ -83,24 +85,20 @@ program advection_rusanov
   !=======================================================
   ! 4) Condition initiale
   !=======================================================
-
-  if (cas_test /= 4) then
-    !----------------------------------------------
-    ! Cas 1–3 : advection scalaire
-    ! u(i,1) = C_init(i_CI, x(i)write(*,*) "Pas d’erreur analytique )
-    !----------------------------------------------
+  select case (cas_test)
+  case (1,2,3)
     do i = 1, nx
-       u(i,1) = C_init(i_CI, x(i))
+      u(i,1) = C_init(i_CI, x(i))
     end do
-
-  else
-    !----------------------------------------------
-    ! Cas 4 : Euler – tube de choc de Sod
-    ! u(:,1) = rho, u(:,2) = rho*u, u(:,3) = E
-    !----------------------------------------------
-    rho0 =0.2_pr
-    call init_euler(x, u, L,rho0)
-  end if
+  case (4)
+    call init_euler(x, u, L)
+  case (5)
+    call init_saint_venant( u)
+  case default
+    write(*,*) "Erreur: cas_test inconnu = ", cas_test
+    stop
+  end select
+    
 
   !=======================================================
   ! 5) Sortie initiale
@@ -113,12 +111,13 @@ program advection_rusanov
   !=======================================================
   ! 6) Boucle en temps
   !=======================================================
-  
   nsteps = ceiling( Tfinal / dt )
   n      = 0
   do while (t < Tfinal)
     if ( cas_test ==4  ) then
       dt = dt_CFL_euler(u, dx, CFL)
+    else if ( cas_test ==5 ) then
+      dt = dt_CFL_sv(u, dx, CFL)
     end if
     
     if (t + dt > Tfinal) then
@@ -201,7 +200,7 @@ program advection_rusanov
 !     u_ref(i,:) = u_ref(i,:) / real(r_ref,pr) ! moyenne des cellules fines contenue dans la cellule grossière
 !   end do
 
-  if (cas_test /= 4) then
+  if (cas_test /= 4 .and. cas_test /= 5) then
     allocate(u_ex(nx,1))
     u_ex(:,1) = U_exa(cas_test, x, t, a(1), L)
     errL2   = erreur_L2(u_ex, u, dx)
@@ -222,10 +221,10 @@ program advection_rusanov
 
      deallocate(u_ex)
     
-  else
+  else if (cas_test == 4) then
     allocate(u_ex(nx,3))
     if (Tfinal==1.0_pr) then
-      call init_euler(x, u_ex, L,rho0)
+      call init_euler(x, u_ex, L)
     else
       V = 1.0_pr; p = 2.0_pr
       

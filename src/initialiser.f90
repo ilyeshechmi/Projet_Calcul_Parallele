@@ -25,10 +25,11 @@ contains
         i_CI = 3  ! CI : nulle partout
         i_CL = 2  ! CL sinusoidale
       ! ---------- Équations d'euler 
-      case (4)  ! cas test 4 : équations d'Euler (tube de choc de Sod)
+      case (4,5)  ! cas test 4 : équations d'Euler (tube de choc de Sod)
         i_CI = 0
         i_CL = 0
         CL_periodique = 0
+  
       
       case default
         print *, "Erreur : Cas de test inconnu"
@@ -40,10 +41,10 @@ contains
   ! CI du tube de choc de Sod
   ! U est (nx,3) : (rho, rho*u, E)
   !-------------------------------------------------------
-  subroutine init_euler(x, U, L,rho0)
+  subroutine init_euler(x, U, L)
     use precision_mod
     implicit none
-    real(pr), intent(in)  :: x(:), L,rho0
+    real(pr), intent(in)  :: x(:), L
     real(pr), intent(out) :: U(:,:)         ! (nx,3)
     integer :: i, nx
     real(pr) :: rho, V, p, E

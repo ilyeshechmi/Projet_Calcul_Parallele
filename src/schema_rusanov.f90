@@ -128,7 +128,7 @@ contains
    !=====================================================
 
    if (muscl == 0) then
-      call build_interface_states(u, a, t, i_CL, 0, cas_test, cl_periodique, uL, uR)
+      call build_interface_states(u, a, t,dx, i_CL, 0, cas_test, cl_periodique, uL, uR)
    else
       ! MUSCL ou MUSCL–Hancock
       do i = 0, nx
@@ -176,7 +176,7 @@ contains
          else
             allocate(uH(nx,dim))
             uH(:,:) = 0.5_pr*(uLh(:,:) + uRh(:,:))
-            call build_interface_states(uH, a, t+0.5_pr*dt, i_CL, 1, cas_test, cl_periodique, uL, uR, pente)
+            call build_interface_states(uH, a, t+0.5_pr*dt,dx, i_CL, 1, cas_test, cl_periodique, uL, uR, pente)
             deallocate(uH)
          end if
       deallocate(uLc, uRc, uLh, uRh)
@@ -185,14 +185,16 @@ contains
    end if
 
    !=====================================================
-   ! 3) Flux de Rusanov aux interfaces
+   ! 3) Flux aux interfaces
    !=====================================================
    do i = 0, nx
-     select case (cas_test)
-     case (1,2,3)   
-      flux(i,:) = flux_rusanov(a(:), uL(i,:), uR(i,:))
-     case (4)
-      flux(i,:) = flux_rusanov_euler(uL(i,:), uR(i,:))
+      select case (cas_test)
+      case (1,2,3)   
+         flux(i,:) = flux_rusanov(a(:), uL(i,:), uR(i,:))
+      case (4)
+         flux(i,:) = flux_rusanov_euler(uL(i,:), uR(i,:))
+      case(5)
+         flux(i,:) = flux_saint_venant(uL(i,:), uR(i,:))
       end select  
    end do
 
@@ -224,8 +226,8 @@ contains
   !      * Euler (cas_test=4) : extrapolation aux bords
   !      * advection : inflow/outflow via C_limite (a(1))
   !=====================================================
-  subroutine build_interface_states(u, a, t, i_CL, muscl, cas_test, cl_periodique, uL, uR, pente)
-   real(pr), intent(in)  :: u(:,:), a(:), t
+  subroutine build_interface_states(u, a, t, dx,i_CL, muscl, cas_test, cl_periodique, uL, uR, pente)
+   real(pr), intent(in)  :: u(:,:), a(:), t,dx
    integer,  intent(in)  :: i_CL, muscl, cas_test, cl_periodique
    real(pr), intent(in), optional :: pente(:,:)
    real(pr), intent(out) :: uL(0:,:), uR(0:,:)
@@ -263,7 +265,45 @@ contains
   !====================================================
   ! CAS NON PERIODIQUE : valeurs fantômes
   !====================================================
-   
+  if (cas_test == 5) then
+
+
+   uL(0,1) = 1 + 0.1 * sin(2._pr * pi *freq * t)
+   uL(0,2) = uL(0,1)
+   uL(0,3) = uL(0,1)**2
+   uL(0,4) = uL(0,1)*0.2*pi*freq*cos(2._pr * pi * freq * t)
+   uL(0,5) = (u(1,5)-u(0,5))/dx 
+
+   if (use_muscl) then
+      uR(0,:) = u(1,:) - 0.5_pr * pente(1,:)
+   else
+      uR(0,:) = u(1,:)
+   end if
+
+   !----------------------------
+   ! Interfaces internes
+   !----------------------------
+   do i = 1, nx-1
+      if (use_muscl) then
+         uL(i,:) = u(i,:)   + 0.5_pr * pente(i,:)
+         uR(i,:) = u(i+1,:) - 0.5_pr * pente(i+1,:)
+      else
+         uL(i,:) = u(i,:)
+         uR(i,:) = u(i+1,:)
+      end if
+   end do
+
+   if (use_muscl) then
+      uL(nx,:) = u(nx,:) + 0.5_pr * pente(nx,:)
+   else
+      uL(nx,:) = u(nx,:)
+   end if
+
+   uR(nx,:) = u(nx,:)   ! extrapolation libre
+
+   return
+   end if
+
   ! Advection inflow / outflow (dim = 1 attendu)
   if (a(1) > 0._pr) then
       uL_bc(1) = C_limite(i_CL, t)
