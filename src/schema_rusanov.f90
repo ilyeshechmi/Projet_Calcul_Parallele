@@ -161,6 +161,13 @@ contains
                ! Euler: F = flux_euler(U)
                   uLh(i,:) = uLc(i,:) - 0.5_pr*(dt/dx) * ( flux_euler(uRc(i,:)) - flux_euler(uLc(i,:)) )
                   uRh(i,:) = uRc(i,:) - 0.5_pr*(dt/dx) * ( flux_euler(uRc(i,:)) - flux_euler(uLc(i,:)) )
+               case (5)
+               ! Saint-Venant: F = f_saint_venant(U)
+                  uLh(i,:) = uLc(i,:) - 0.5_pr*(dt/dx) * ( f_saint_venant(uRc(i,:)) - f_saint_venant(uLc(i,:)) )
+                  uRh(i,:) = uRc(i,:) - 0.5_pr*(dt/dx) * ( f_saint_venant(uRc(i,:)) - f_saint_venant(uLc(i,:)) )
+               case default
+                  print *, "Erreur : Cas de test inconnu"
+                  stop
             end select
          end do
 
@@ -272,7 +279,7 @@ contains
    uL(0,2) = uL(0,1)
    uL(0,3) = uL(0,1)**2
    uL(0,4) = uL(0,1)*0.2*pi*freq*cos(2._pr * pi * freq * t)
-   uL(0,5) = (u(1,5)-u(0,5))/dx 
+   uL(0,5) = ((u(1,3))/u(1,1)-uL(0,1))/dx
 
    if (use_muscl) then
       uR(0,:) = u(1,:) - 0.5_pr * pente(1,:)

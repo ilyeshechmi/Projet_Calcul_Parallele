@@ -8,11 +8,11 @@
   ! cas_test = 5 ; CI = exp LiuGollub , CL = Vibration + Neuman
   ! ------------------------------------------------------------
 
-  nx         = 80 ! Nombre de points de discrétisation
+  nx         = 320 ! Nombre de points de discrétisation
   L          = 10.0       ! Longueur du domaine spatial
   a          = 2.0        ! Vitesse d’advection
   CFL        = 0.9     ! Condition initiale
   T_final    = 5.0       ! Temps final de la simulation
-  save_every = 1000        ! Sauvegarde tous les n pas de temps
+  save_every = 100        ! Sauvegarde tous les n pas de temps
   outfile    = 'resultats/results'   ! Préfixe des fichiers de sortie
 /

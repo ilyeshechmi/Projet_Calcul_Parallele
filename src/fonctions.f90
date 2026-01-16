@@ -276,7 +276,7 @@ contains
     a_alphaL = eta_L/(h_L*sqrt(alpha))
     a_betaL  = sqrt( (kappa*epsilon**2)/(beta*h_L*F**2) )
     psi1L    = 0.5*(aL**2 + a_sigmaL**2 + a_alphaL**2 +a_betaL**2)
-    psi2L    = 0.5*sqrt( ((aL**2 + a_sigmaL**2 + a_alphaL**2 - a_betaL**2))**2 + 4._pr*a_alphaL**2*a_betaL**2 )
+    psi2L    = 0.5*sqrt( ((aL**2 + a_sigmaL**2 + a_alphaL**2 - a_betaL**2))**2 + 4._pr*a_sigmaL**2*a_betaL**2 )
 
     smax = abs(U_L) + sqrt( psi1L + psi2L )
 

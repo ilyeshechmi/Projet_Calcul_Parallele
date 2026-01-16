@@ -70,7 +70,7 @@ program advection_rusanov
      stop
   end select
   
-  i_schema= 2! 0: rusanov , 1: muscl , 2 : muscl hancock
+  i_schema= 0! 0: rusanov , 1: muscl , 2 : muscl hancock
   
   !=======================================================
   ! 3) Grille spatiale et allocation de u
