@@ -37,6 +37,20 @@ contains
    Fnum = 0.5_pr * (FL + FR) - 0.5_pr * smax * (UcR - UcL)
   end function flux_rusanov_euler
 
+  function flux_saint_venant(UcL,UcR) result(Fnum)
+   real(pr), intent(in) :: UcL(:), UcR(:)
+   real(pr) :: Fnum(Size(UcL))
+   real(pr) :: FL(size(UcL)), FR(size(UcL))
+   real(pr) :: smax
+
+   FL = f_saint_venant(UcL)
+   FR = f_saint_venant(UcR)
+
+   smax = max_wave_speed_sv(UcL, UcR)
+
+   Fnum = 0.5_pr * (FL + FR) - 0.5_pr * smax * (UcR - UcL)
+  end function flux_saint_venant
+
 
   !========================================================
   ! Limiteur de pente : minmod(a, b)

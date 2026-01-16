@@ -182,85 +182,138 @@ contains
   end function erreur_Linf
 
   function source_term(U, x, t, cas_test) result(S)
-  real(pr), intent(in) :: U(:), x, t
-  integer,  intent(in) :: cas_test
-  real(pr) :: S(size(U))
-  real(pr) :: h, hU, heta, hw
-  real(pr) :: vel, eta, w
+    real(pr), intent(in) :: U(:), x, t
+    integer,  intent(in) :: cas_test
+    real(pr) :: S(size(U))
+    real(pr) :: h, hU, heta, hw
+    real(pr) :: vel, eta, w
 
-  ! Valeur par défaut
-  S(:) = 0._pr
-
-  select case (cas_test)
-
-  case (1,2,3)
     S(:) = 0._pr
-  case (4)
-    S(:) = 0._pr
-  case (5)
-    h    = U(1)
-    hU   = U(2)
-    heta = U(3)
-    hw   = U(4)
 
-    vel = hU / h
-    eta = heta / h
-    w   = hw / h
+    select case (cas_test)
 
-    S(1) = 0._pr
-    S(2) = (lambda*h)/(epsilon*Re) &
-         - (3._pr*vel)/(h*epsilon*Re)
-    S(3) = hw
-    S(4) = (1._pr/(alpha*beta))*(1._pr - eta/h) &
-         - (9._pr*epsilon/(2._pr*beta*eta*Re))*w
-    S(5) = 0._pr
+    case (1,2,3)
+      S(:) = 0._pr
+    case (4)
+      S(:) = 0._pr
+    case (5)
+      h    = U(1)
+      hU   = U(2)
+      heta = U(3)
+      hw   = U(4)
 
-  end select
+      vel = hU / h
+      eta = heta / h
+      w   = hw / h
 
-end function source_term
+      S(1) = 0._pr
+      S(2) = (lambda*h)/(epsilon*Re) &
+           - (3._pr*vel)/(h*epsilon*Re)
+      S(3) = hw
+      S(4) = (1._pr/(alpha*beta))*(1._pr - eta/h) &
+           - (9._pr*epsilon/(2._pr*beta*eta*Re))*w
+      S(5) = 0._pr
 
+    end select
 
-function flux_advection(a, u) result(FU)
-  real(pr), intent(in) :: a(:), u(:)
-  real(pr) :: FU(size(u))
-
-  FU(:) = a(:) * u(:)
-end function flux_advection
+  end function source_term
 
 
-function flux_saint_venant(U) result(Fu)
-  real(pr), intent(in) :: U(5)
-  real(pr) :: Fu(5)
-  real(pr) :: h, hU, h_eta, h_w, p
-  real(pr) :: Uv, eta
-  real(pr) :: Press
+  function flux_advection(a, u) result(FU)
+    real(pr), intent(in) :: a(:), u(:)
+    real(pr) :: FU(size(u))
+
+    FU(:) = a(:) * u(:)
+
+  end function flux_advection
 
 
-  h     = U(1)
-  hU    = U(2)
-  h_eta = U(3)
-  h_w   = U(4)
-  p     = U(5)
+  function f_saint_venant(U) result(Fu)
+    real(pr), intent(in) :: U(5)
+    real(pr) :: Fu(5)
+    real(pr) :: h, hU, h_eta, h_w, p
+    real(pr) :: Uv, eta
+    real(pr) :: Press
+    
+    h     = U(1)
+    hU    = U(2)
+    h_eta = U(3)
+    h_w   = U(4)
+    p     = U(5)
 
-  Uv  = hU / h
-  eta = h_eta / h
+    Uv  = hU / h
+    eta = h_eta / h
+    Press = (2._pr*lambda**2/225._pr)*h**5 + (cos(theta)/(2._pr*F**2))*h**2
 
-  Press = (2._pr*lambda**2/225._pr)*h**5 + (cos(theta)/(2._pr*F**2))*h**2
 
+    Fu(1) = hU
 
-  Fu(1) = hU
+    Fu(2) = hU*Uv + Press &
+          + (eta/alpha)*(1._pr - eta/h) &
+          + (epsilon**2*kappa**2/(2._pr*F**2))*p**2
 
-  Fu(2) = hU*Uv + Press &
-         + (eta/alpha)*(1._pr - eta/h) &
-         + (epsilon**2*kappa**2/(2._pr*F**2))*p**2
+    Fu(3) = h_eta * Uv
 
-  Fu(3) = h_eta * Uv
+    Fu(4) = h_w * Uv - (epsilon**2*kappa/(beta*F**2))*p
 
-  Fu(4) = h_w * Uv - (epsilon**2*kappa/(beta*F**2))*p
+    Fu(5) = p*Uv - h_w/h
 
-  Fu  (5) = p*Uv - h_w/h
+  end function f_saint_venant
 
-end function flux_saint_venant
+  function CFL_saint_venant(UcL) result(smax)
+    real(pr), intent(in) :: UcL(:)
+    real(pr) :: smax
+    real(pr) :: aL, a_sigmaL, a_alphaL,a_betaL,psi1L,psi2L
+    real(pr) :: h_L, p_L,U_L,eta_L
+
+    h_L = UcL(1)
+    U_L = UcL(2)/h_L
+    p_L = UcL(5)
+    eta_L = UcL(3)/h_L
+
+    aL       = sqrt( (2._pr*lambda**2/45._pr)*h_L**4 + (cos(theta)/F**2)*h_L )
+    a_sigmaL = sqrt(kappa*epsilon**2/(h_L*F**2)*p_L**2)
+    a_alphaL = eta_L/(h_L*sqrt(alpha))
+    a_betaL  = sqrt( (kappa*epsilon**2)/(beta*h_L*F**2) )
+    psi1L    = 0.5*(aL**2 + a_sigmaL**2 + a_alphaL**2 +a_betaL**2)
+    psi2L    = 0.5*sqrt( ((aL**2 + a_sigmaL**2 + a_alphaL**2 - a_betaL**2))**2 + 4._pr*a_alphaL**2*a_betaL**2 )
+
+    smax = abs(U_L) + sqrt( psi1L + psi2L )
+
+  end function CFL_saint_venant
+
+  function max_wave_speed_sv(Ucl,UcR) result(smax)
+    real(pr), intent(in) :: Ucl(:), UcR(:)
+    real(pr) :: smax
+    real(pr) :: smaxL, smaxR
+
+    smaxL = CFL_saint_venant(Ucl)
+    smaxR = CFL_saint_venant(UcR)
+    smax = max(smaxL, smaxR)
+
+  end function max_wave_speed_sv
+
+  function dt_CFL_sv(U, dx, CFL) result(dt)
+    real(pr), intent(in) :: U(:,:), dx, CFL
+    real(pr) :: dt
+    integer :: i, nx
+    real(pr) :: smax,ksi
+    real(pr) :: Uc(size(U,2))
+
+    nx   = size(U,1)
+    smax = 0._pr
+
+    do i = 1, nx
+
+      Uc = U(i,:)
+      ksi = CFL_saint_venant(Uc)
+      if (ksi > smax) then
+        smax = ksi
+      end if
+    end do
+
+    dt = CFL * dx / smax
+  end function dt_CFL_sv
 
 
 
